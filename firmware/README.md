@@ -59,4 +59,17 @@ git -C "$MCXN_SDK/mcuxsdk/examples" apply \
   /home/jxy/NXP/MCXN947/firmware/patches/0002-sync-display-flush-to-te.patch
 ```
 
+## Revision 0003: one TE wait per LVGL update
+
+Waiting for TE before every partial-strip write capped the UI at roughly one
+strip per display frame and caused long drags to become slow. This revision:
+
+- waits only on the first flush of each complete LVGL update;
+- writes all strips for that update immediately after the TE pulse;
+- increases the partial buffer from 1/10 to 1/4 of the screen height;
+- restores the TE-wait state on the last flush of the update.
+
+Apply all three patches in numeric order.
+
+
 

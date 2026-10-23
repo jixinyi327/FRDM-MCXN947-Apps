@@ -1,0 +1,64 @@
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+index ab3d336..c53680b 100644
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+@@ -67,6 +67,7 @@ static void DEMO_CheckChipRevision(void);
+  ******************************************************************************/
+ static gt911_handle_t touchHandle;
+ static volatile bool s_touchPending = false;
++static volatile bool s_teSyncPending = true;
+ 
+ #if (LV_USE_GESTURE_RECOGNITION == 1)
+ /* An array that stores the collected touch events */
+@@ -556,14 +557,19 @@ static void DEMO_FlushDisplay(lv_display_t *disp_drv, const lv_area_t *area, uin
+ 
+     ST7796S_SelectArea(&lcdHandle, x1, y1, x2, y2);
+ 
+-    if (!DEMO_WaitForTE())
++    if (s_teSyncPending)
+     {
+-        static bool teTimeoutReported = false;
++        s_teSyncPending = false;
+ 
+-        if (!teTimeoutReported)
++        if (!DEMO_WaitForTE())
+         {
+-            PRINTF("LCD TE timeout; continuing without frame synchronization\r\n");
+-            teTimeoutReported = true;
++            static bool teTimeoutReported = false;
++
++            if (!teTimeoutReported)
++            {
++                PRINTF("LCD TE timeout; continuing without frame synchronization\r\n");
++                teTimeoutReported = true;
++            }
+         }
+     }
+ 
+@@ -585,6 +591,11 @@ static void DEMO_FlushDisplay(lv_display_t *disp_drv, const lv_area_t *area, uin
+     }
+ #endif
+ 
++    if (lv_display_flush_is_last(disp_drv))
++    {
++        s_teSyncPending = true;
++    }
++
+     /* IMPORTANT!!!
+      * Inform the graphics library that you are ready with the flushing*/
+     lv_disp_flush_ready(disp_drv);
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.h b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.h
+index 6035ceb..d2f03c4 100644
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.h
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.h
+@@ -23,8 +23,8 @@
+ #define LCD_HEIGHT 320
+ 
+ #define LCD_FB_BYTE_PER_PIXEL 2
+-/* The virtual buffer for DBI panel, it should be ~1/10 screen size. */
+-#define LCD_VIRTUAL_BUF_HEIGHT (LCD_HEIGHT / 10)
++/* Large enough to reduce the number of partial strips and TE waits. */
++#define LCD_VIRTUAL_BUF_HEIGHT (LCD_HEIGHT / 4)
+ #define LCD_VIRTUAL_BUF_SIZE   (LCD_WIDTH * LCD_VIRTUAL_BUF_HEIGHT)
+ 
+ /*******************************************************************************
