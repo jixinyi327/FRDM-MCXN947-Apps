@@ -99,6 +99,63 @@ else
     warn 'verify hidden and disabled controls are excluded from interaction'
 fi
 
+printf '\n== Localization and font configuration ==\n'
+
+NON_FONT_FILES=()
+for file in "${source_files[@]}"; do
+    if [[ "$file" != */fonts/* ]]; then
+        NON_FONT_FILES+=("$file")
+    fi
+done
+
+PROJECT_DIR="$(cd "$SOURCE_DIR/.." && pwd)"
+if [[ -n "${LVGL_UI_CONFIG:-}" ]]; then
+    CONFIG_FILE="$LVGL_UI_CONFIG"
+elif [[ -f "$PROJECT_DIR/prj.conf" ]]; then
+    CONFIG_FILE="$PROJECT_DIR/prj.conf"
+else
+    CONFIG_FILE="$(find "$PROJECT_DIR" -maxdepth 2 -type f -name prj.conf -print -quit 2>/dev/null || true)"
+fi
+
+if [[ -n "$CONFIG_FILE" && -f "$CONFIG_FILE" ]]; then
+    pass "LVGL project config: $CONFIG_FILE"
+else
+    warn 'prj.conf not found; pass LVGL_UI_CONFIG to validate text/font encoding'
+fi
+
+if (( ${#NON_FONT_FILES[@]} > 0 )); then
+    NON_ASCII_FILES="$(rg -l -P '[^\x00-\x7F]' "${NON_FONT_FILES[@]}" 2>/dev/null || true)"
+else
+    NON_ASCII_FILES=""
+fi
+
+if [[ -n "$NON_ASCII_FILES" ]]; then
+    if [[ -z "$CONFIG_FILE" || ! -f "$CONFIG_FILE" ]]; then
+        warn 'non-ASCII UI text exists but UTF-8 configuration could not be verified'
+    elif rg -q '^CONFIG_LV_TXT_ENC_ASCII=y$' "$CONFIG_FILE"; then
+        fail 'non-ASCII UI text requires UTF-8 encoding, but ASCII encoding is enabled'
+    elif rg -q '^CONFIG_LV_TXT_ENC_UTF8=y$' "$CONFIG_FILE"; then
+        pass 'non-ASCII UI text uses UTF-8 encoding'
+    else
+        fail 'non-ASCII UI text exists but CONFIG_LV_TXT_ENC_UTF8 is not enabled'
+    fi
+else
+    pass 'no non-font source files contain non-ASCII literals'
+fi
+
+COMPRESSED_FONT_FILES="$(rg -l 'bitmap_format[[:space:]]*=[[:space:]]*1' "${source_files[@]}" 2>/dev/null || true)"
+if [[ -n "$COMPRESSED_FONT_FILES" ]]; then
+    if [[ -z "$CONFIG_FILE" || ! -f "$CONFIG_FILE" ]]; then
+        warn 'compressed font data exists but decoder configuration could not be verified'
+    elif rg -q '^CONFIG_LV_USE_FONT_COMPRESSED=y$' "$CONFIG_FILE"; then
+        pass 'compressed font data matches LV_USE_FONT_COMPRESSED'
+    else
+        fail 'compressed font data requires CONFIG_LV_USE_FONT_COMPRESSED=y'
+    fi
+else
+    pass 'no compressed custom font data detected'
+fi
+
 printf '\n== Result ==\n'
 printf 'failures=%d warnings=%d\n' "$fail_count" "$warn_count"
 

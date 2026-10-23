@@ -1,6 +1,6 @@
 ---
 name: lvgl-ui
-description: "Design, implement, and review maintainable LVGL embedded interfaces with clear screen purpose, centralized style tokens, consistent widget states, predictable focus and touch behavior, and practical memory/rendering budgets. Use for LVGL UI structure or implementation; use a platform-specific performance skill for display-driver, DMA, TE, tearing, or board timing work."
+description: "Design, implement, review, and localize maintainable LVGL embedded interfaces with clear screen purpose, centralized style and translation sources, consistent widget states, predictable focus and touch behavior, and practical memory/rendering budgets. Use for LVGL UI structure or implementation; use a platform-specific performance skill for display-driver, DMA, TE, tearing, or board timing work."
 ---
 
 # LVGL UI
@@ -14,6 +14,7 @@ description: "Design, implement, and review maintainable LVGL embedded interface
 
 - 信息架构、主任务和操作层级；
 - 颜色、字体、尺寸、间距、状态和组件样式；
+- 中英文/多语言文案、默认语言、切换流程和字体子集；
 - 触控命中、焦点、反馈、错误恢复和破坏性操作；
 - 图片、字体、动画和层级资源的设计预算；
 - 纯 C 与 XML/Pro 工程的代码组织和命名。
@@ -46,7 +47,20 @@ description: "Design, implement, and review maintainable LVGL embedded interface
 样式实现模式见
 [references/design-tokens-and-styles.md](references/design-tokens-and-styles.md)。
 
-### 3. 设计交互
+### 3. 规划本地化与字体
+
+- 所有可见文案通过稳定文本 ID 和统一翻译表获取。
+- 默认语言必须由产品需求明确，初始化时确定性设置。
+- 语言切换必须覆盖静态标签、动态状态、菜单、信息栏、模态框和错误反馈。
+- 非 ASCII 文本启用 UTF-8，并显式关闭 ASCII 文本编码。
+- 使用压缩字形时同时启用对应字体解压配置；字体生成格式与 LVGL 配置必须匹配。
+- CJK 使用从翻译表生成的字体子集，覆盖所有 UI 字号和格式化字符。
+- 文案变化后重新生成字体，并检查字形覆盖、缺字、截断和双向切换。
+
+中英文实现、字体配置和验收矩阵见
+[references/localization.md](references/localization.md)。
+
+### 4. 设计交互
 
 - 触控目标建议至少 `38x38 px`；尺寸不足时使用
   `lv_obj_set_ext_click_area()` 扩展命中区。
@@ -60,7 +74,7 @@ description: "Design, implement, and review maintainable LVGL embedded interface
 焦点、命中和容错规则见
 [references/interaction-and-focus.md](references/interaction-and-focus.md)。
 
-### 4. 先做资源预算
+### 5. 先做资源预算
 
 - 在设计阶段估算帧尺寸、刷新区域、动画面积、图片解码和字体覆盖。
 - 避免全屏半透明叠层、每帧全屏渐变、超大 ARGB 图片和无边界动画。
@@ -71,7 +85,7 @@ description: "Design, implement, and review maintainable LVGL embedded interface
 预算方法和优化顺序见
 [references/embedded-resource-budget.md](references/embedded-resource-budget.md)。
 
-### 5. 实现并组织工程
+### 6. 实现并组织工程
 
 - 不编辑工具生成的 C/H 文件；生成物与手写代码分离。
 - 组件尺寸优先使用 flex/grid、百分比和内容尺寸。
@@ -83,7 +97,7 @@ description: "Design, implement, and review maintainable LVGL embedded interface
 代码组织、命名、生成代码和 XML/Pro 策略见
 [references/maintainability-and-naming.md](references/maintainability-and-naming.md)。
 
-### 6. 审查和验收
+### 7. 审查和验收
 
 - 先运行可用项目脚本和构建；再逐项执行下方检查清单。
 - 对照每个屏幕的慢操作、快速操作、错误操作、取消和返回路径。
@@ -112,7 +126,9 @@ bash scripts/audit_lvgl_ui.sh <ui-source-directory>
 7. 不编辑生成文件，不让页面与资源生成器互相覆盖。
 8. 资源设计必须符合目标 MCU 的 RAM、Flash、带宽和刷新预算。
 9. 页面切换和状态变化不能破坏平台已建立的显示所有权。
-10. 编译通过、样式构建通过或静态检查通过，都不等于实机 UI 验收通过。
+10. 所有可见文案必须走统一翻译源，不能散落在页面里形成无法同步的双语实现。
+11. 含非 ASCII 文本时必须验证 UTF-8 配置和字体字形解码配置。
+12. 编译通过、样式构建通过或静态检查通过，都不等于实机 UI 验收通过。
 
 ## 提交前检查清单
 
@@ -145,6 +161,21 @@ bash scripts/audit_lvgl_ui.sh <ui-source-directory>
 - [ ] 配置修改后显示明确的成功、失败或未改变状态。
 - [ ] 编码器/D-pad 焦点顺序可预测，初始和返回焦点已定义。
 - [ ] 错误操作后可以返回、重试或恢复，不形成死路。
+
+### 本地化与字体
+
+- [ ] 所有可见文案通过稳定文本 ID 和单一翻译表获取。
+- [ ] 默认语言已由产品需求明确并可复现。
+- [ ] 语言切换会更新静态标签、动态状态、菜单、信息栏、模态框和错误反馈。
+- [ ] 格式化文本使用完整模板，没有拼接不可翻译的半句。
+- [ ] 非 ASCII 文本启用 `LV_TXT_ENC_UTF8` 并禁用 ASCII 编码。
+- [ ] 压缩字形与 `LV_USE_FONT_COMPRESSED` 配置一致。
+- [ ] CJK 字体子集覆盖全部翻译字符、数字和标点。
+- [ ] 文案修改后已通过项目脚本重新生成字体。
+- [ ] 中文无方框、空白、乱码或缺字。
+- [ ] 英文无中文残留，布局无截断。
+- [ ] 中英文双向切换后，页面和动态状态保持一致。
+- [ ] 冷启动和重启后的默认语言符合需求。
 
 ### 资源与性能
 

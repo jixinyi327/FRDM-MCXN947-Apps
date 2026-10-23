@@ -1,4 +1,4 @@
 interface:
   display_name: "LVGL UI Design"
-  short_description: "Design and review maintainable embedded LVGL interfaces"
-  default_prompt: "Use $lvgl-ui to design or review this LVGL interface against the embedded UI checklist."
+  short_description: "Design and localize maintainable embedded LVGL interfaces"
+  default_prompt: "Use $lvgl-ui to design, localize, or review this LVGL interface against the embedded UI checklist."
