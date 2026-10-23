@@ -57,6 +57,14 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Node-based generator caches
+node_modules/
 
 # OS/editor junk
 .DS_Store
@@ -66,4 +74,32 @@ Desktop.ini
 *.swp
 *.swo
 *~
+*.bak
+*.orig
+*.rej
+*.stackdump
+*.uvguix.*
+JLinkSettings.ini
+
+# IDE-local state; shared VS Code settings remain tracked.
+/.vscode/*
+!/.vscode/settings.json
+/.idea/
+/.history/
+/.cache/
+/.clangd/
+/.ccls-cache/
+**/CMakeUserPresets.json
+**/Testing/
+
+# Additional executable image formats
+*.s19
+*.srec
+*.uf2
+*.axf
+
+# Local-only environment secrets
+/.env
+/.env.local
+/.env.*.local
 
