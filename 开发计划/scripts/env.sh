@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 
-# Source this file:
-#   source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    ENV_SOURCE_FILE="${BASH_SOURCE[0]}"
+elif [[ -n "${ZSH_VERSION:-}" ]]; then
+    ENV_SOURCE_FILE="${(%):-%N}"
+else
+    ENV_SOURCE_FILE="$0"
+fi
 
-export MCXN_ROOT="${MCXN_ROOT:-/home/jxy/NXP/MCXN947}"
+SCRIPT_DIR="$(cd "$(dirname "$ENV_SOURCE_FILE")" && pwd)"
+DEFAULT_MCXN_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Source this file. MCXN_ROOT can be overridden before sourcing.
+export MCXN_ROOT="${MCXN_ROOT:-$DEFAULT_MCXN_ROOT}"
 export MCXN_SDK="${MCXN_SDK:-$MCXN_ROOT/mcuxpresso-sdk}"
 export ARMGCC_DIR="${ARMGCC_DIR:-$MCXN_ROOT/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi}"
 export MCXN_LINKSERVER_DIR="${MCXN_LINKSERVER_DIR:-$MCXN_ROOT/tools/linkserver/usr/local/LinkServer_26.9.130}"

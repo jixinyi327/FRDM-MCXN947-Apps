@@ -1,5 +1,6 @@
 # Rebuildable vendor and local tool installations
 /mcuxpresso-sdk/
+/mcuxpresso-sdk-next/
 /toolchains/
 /tools/
 /downloads/

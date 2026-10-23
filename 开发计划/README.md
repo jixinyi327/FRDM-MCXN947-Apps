@@ -109,6 +109,7 @@ west flash -d build/hello_world_core0 -r linkserver
 | 脚本 | 用途 |
 |---|---|
 | `scripts/env.sh` | 为当前 shell 设置 SDK、GCC、west、LinkServer 路径 |
+| `scripts/manage_dev_env.sh` | 检查/搭建 Linux 环境，并通过 SSH/HTTPS 检查或更新 SDK |
 | `scripts/check_env.sh` | 检查工具版本、SDK 板级支持、构建产物和 USB/串口状态 |
 | `scripts/build_hello.sh` | 重编并验证 `hello_world` |
 | `scripts/monitor.sh` | 打开 115200 串口监视器，自动发现唯一串口 |

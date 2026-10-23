@@ -67,6 +67,62 @@ git push -u origin main
 
 屏幕接到板卡的 LCD 接口。不要同时从多个入口给板卡供电。
 
+## 一键环境管理（推荐）
+
+克隆仓库后，直接运行纯 Bash 管理脚本：
+
+```bash
+cd <repository-directory>
+bash 开发计划/scripts/manage_dev_env.sh
+```
+
+交互菜单提供：
+
+1. 检查 Linux/WSL2 环境和固定工具版本；
+2. 在环境不满足时选择安装或修复；
+3. 使用 SSH 或 HTTPS 检查 SDK Release；
+4. 列出与当前 manifest 不一致或含本地改动的组件；
+5. 确认后更新 SDK 和板级组件；
+6. 创建独立的新版 SDK 工作区。
+
+脚本支持 Ubuntu/Debian x86_64、WSL2 和 root 容器。当前固定下载的 NXP 工具是
+Linux x86_64 版本，因此原生 Windows 必须使用 WSL2，ARM64 主机不在自动安装范围内。
+
+常用非交互命令：
+
+```bash
+# 只检查，不修改文件
+bash 开发计划/scripts/manage_dev_env.sh --check
+
+# SSH 检查更新
+bash 开发计划/scripts/manage_dev_env.sh \
+  --check-updates --transport ssh --no-input
+
+# SSH 更新当前 SDK；如果 SDK 有本地改动会拒绝执行
+bash 开发计划/scripts/manage_dev_env.sh \
+  --update --transport ssh
+
+# 不动当前 SDK，创建独立新版工作区
+bash 开发计划/scripts/manage_dev_env.sh \
+  --fresh --transport ssh
+```
+
+SSH 首次配置：
+
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+cat ~/.ssh/id_ed25519.pub
+```
+
+把公钥添加到 GitHub 的 `Settings > SSH and GPG keys`，然后验证：
+
+```bash
+ssh -T git@github.com
+```
+
+脚本不会自动覆盖带有本地修改的 SDK。当前 `mcuxsdk/examples` 有显示补丁改动时，
+应使用 `--fresh`，或先将改动保存为 `firmware/patches/` 中的补丁并清理工作树。
+
 ## 开发环境搭建
 
 以下步骤用于新机器复现。当前工作区已安装时，可以直接跳到“每次打开终端”。
@@ -83,15 +139,16 @@ sudo apt install -y \
 ### 2. 创建工作区
 
 ```bash
-mkdir -p /home/jxy/NXP/MCXN947
-cd /home/jxy/NXP/MCXN947
+WORKSPACE="${MCXN_WORKSPACE:-$HOME/NXP/MCXN947}"
+mkdir -p "$WORKSPACE"
+cd "$WORKSPACE"
 git clone <repository-url> .
 ```
 
 如果目录中已经有项目文件，只执行：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 ```
 
 ### 3. Python 工具和 west
@@ -145,7 +202,7 @@ SDK 完整同步约 7.8 GB，下载时间取决于网络。详细流程见
 ### 6. LinkServer 26.9.130
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 mkdir -p downloads tools/linkserver
 
 curl -L --retry 3 \
@@ -167,7 +224,7 @@ dpkg-deb -x \
 每次打开新终端都执行：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 source 开发计划/scripts/env.sh
 ```
 
@@ -206,7 +263,7 @@ ls -l /dev/ttyACM* /dev/ttyUSB*
 推荐使用应用自带脚本：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 ./apps/touchscreen_tester/build.sh
 ```
 
@@ -227,12 +284,12 @@ mcuxpresso-sdk/build/touchscreen_tester_core0/touchscreen_tester_cm33_core0.bin
 等价的 west 命令：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 source 开发计划/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \
-  /home/jxy/NXP/MCXN947/apps/touchscreen_tester \
+  "$MCXN_ROOT/apps/touchscreen_tester" \
   -d build/touchscreen_tester_core0 -p always \
   --config debug -Dcore_id=cm33_core0
 ```
@@ -242,7 +299,7 @@ west build -b frdmmcxn947 \
 推荐：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 ./apps/touchscreen_tester/build.sh --flash
 ```
 
@@ -251,7 +308,7 @@ cd /home/jxy/NXP/MCXN947
 等价的 west 命令：
 
 ```bash
-cd /home/jxy/NXP/MCXN947
+cd "$WORKSPACE"
 source 开发计划/scripts/env.sh
 cd "$MCXN_SDK"
 west flash -d build/touchscreen_tester_core0 -r linkserver
@@ -333,7 +390,7 @@ Use $frdm-mcxn947-lvgl-ui-performance to diagnose display tearing.
 west 必须在 SDK 工作区内运行。先执行：
 
 ```bash
-cd /home/jxy/NXP/MCXN947/mcuxpresso-sdk
+cd "$WORKSPACE/mcuxpresso-sdk"
 source ../开发计划/scripts/env.sh
 ```
 
