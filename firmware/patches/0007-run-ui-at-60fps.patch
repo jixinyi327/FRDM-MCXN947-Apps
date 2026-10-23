@@ -1,0 +1,15 @@
+diff --git a/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c b/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
+--- a/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
++++ b/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
+@@ -22,9 +22,9 @@
+ #define LVGL_TICK_MS 1U
+ #endif
+ 
+-/* Limit UI refresh and touch processing to about 30 FPS. */
++/* Run the UI loop at about 60 FPS; actual rate is limited by display/TE. */
+ #ifndef LVGL_TASK_PERIOD_TICK
+-#define LVGL_TASK_PERIOD_TICK 33U
++#define LVGL_TASK_PERIOD_TICK 16U
+ #endif
+ 
+ /*******************************************************************************

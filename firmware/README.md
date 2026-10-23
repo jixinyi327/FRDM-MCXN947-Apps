@@ -94,6 +94,15 @@ through FlexIO and a large dragged object invalidates both its old and new
 areas. This patch changes the default task cadence to 33 ms (about 30 FPS),
 reducing CPU, bus and memory-bandwidth load during drag without adding RAM.
 
+## Revision 0007: 60 FPS UI cadence
+
+This revision changes the UI task period from 33 ms to 16 ms, providing a
+nominal 62.5 FPS upper bound. Actual throughput remains limited by ST7796 scan
+rate, TE synchronization, FlexIO transfer time and the amount of invalidated
+area.
+
+Apply all seven patches in numeric order.
+
 
 
 
