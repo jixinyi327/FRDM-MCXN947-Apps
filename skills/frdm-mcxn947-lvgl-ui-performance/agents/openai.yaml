@@ -1,0 +1,4 @@
+interface:
+  display_name: "FRDM-MCXN947 LVGL UI Performance"
+  short_description: "Reproducible LVGL performance and tearing workflow"
+  default_prompt: "Use $frdm-mcxn947-lvgl-ui-performance to diagnose and optimize this LVGL UI without changing visual style."
