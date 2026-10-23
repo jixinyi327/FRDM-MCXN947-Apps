@@ -43,3 +43,20 @@ display-memory updates.
 The patch keeps the same allocation and RAM usage, but restores the intended
 32-row buffer height.
 
+## Revision 0002: TE/VBlank synchronization
+
+The second patch enables the panel TE signal in V-blank mode and waits for the
+next complete TE pulse before writing pixels to ST7796S internal memory. A
+25 ms timeout prevents a missing TE signal from locking the UI permanently.
+
+Apply in order:
+
+```bash
+git -C "$MCXN_SDK/mcuxsdk/examples" apply \
+  /home/jxy/NXP/MCXN947/firmware/patches/0001-fix-lvgl-partial-buffer-size.patch
+
+git -C "$MCXN_SDK/mcuxsdk/examples" apply \
+  /home/jxy/NXP/MCXN947/firmware/patches/0002-sync-display-flush-to-te.patch
+```
+
+

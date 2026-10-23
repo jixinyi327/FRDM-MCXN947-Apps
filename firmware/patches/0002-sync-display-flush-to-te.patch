@@ -1,0 +1,74 @@
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+@@ -58,6 +58,8 @@ static void DEMO_SetCSPin(bool set);
+ 
+ static void DEMO_SetRSPin(bool set);
+ 
++static bool DEMO_WaitForTE(void);
++
+ static void DEMO_CheckChipRevision(void);
+ 
+ /*******************************************************************************
+@@ -170,6 +172,34 @@ static void DEMO_SetRSPin(bool set)
+ #endif
+ }
+ 
++#define DEMO_TE_WAIT_TIMEOUT_US 25000U
++#define DEMO_TE_POLL_INTERVAL_US 10U
++
++/*
++ * Wait for the next complete TE pulse. If TE is already high, first wait for
++ * it to return low, then wait for the next rising edge.
++ */
++static bool DEMO_WaitForTE(void)
++{
++    uint32_t elapsedUs = 0U;
++
++    while ((0U != GPIO_PinRead(BOARD_LCD_TE_GPIO, BOARD_LCD_TE_PIN)) &&
++           (elapsedUs < DEMO_TE_WAIT_TIMEOUT_US))
++    {
++        SDK_DelayAtLeastUs(DEMO_TE_POLL_INTERVAL_US, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
++        elapsedUs += DEMO_TE_POLL_INTERVAL_US;
++    }
++
++    while ((0U == GPIO_PinRead(BOARD_LCD_TE_GPIO, BOARD_LCD_TE_PIN)) &&
++           (elapsedUs < DEMO_TE_WAIT_TIMEOUT_US))
++    {
++        SDK_DelayAtLeastUs(DEMO_TE_POLL_INTERVAL_US, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
++        elapsedUs += DEMO_TE_POLL_INTERVAL_US;
++    }
++
++    return elapsedUs < DEMO_TE_WAIT_TIMEOUT_US;
++}
++
+ static void DEMO_DbiMemoryDoneCallback(status_t status, void *userData)
+ {
+ #if defined(SDK_OS_FREE_RTOS)
+@@ -369,7 +399,7 @@ status_t DEMO_InitLcdController(void)
+     const st7796s_config_t st7796sConfig = {.driverPreset    = kST7796S_DriverPresetLCDPARS035,
+                                             .pixelFormat     = kST7796S_PixelFormatRGB565,
+                                             .orientationMode = kST7796S_Orientation270,
+-                                            .teConfig        = kST7796S_TEDisabled,
++                                            .teConfig        = kST7796s_TEVSync,
+                                             .invertDisplay   = true,
+                                             .flipDisplay     = true,
+                                             .bgrFilter       = true};
+@@ -526,6 +556,17 @@ static void DEMO_FlushDisplay(lv_display_t *disp_drv, const lv_area_t *area, uin
+ 
+     ST7796S_SelectArea(&lcdHandle, x1, y1, x2, y2);
+ 
++    if (!DEMO_WaitForTE())
++    {
++        static bool teTimeoutReported = false;
++
++        if (!teTimeoutReported)
++        {
++            PRINTF("LCD TE timeout; continuing without frame synchronization\r\n");
++            teTimeoutReported = true;
++        }
++    }
++
+ #if !defined(SDK_OS_FREE_RTOS)
+     s_memWriteDone = false;
+ #endif
