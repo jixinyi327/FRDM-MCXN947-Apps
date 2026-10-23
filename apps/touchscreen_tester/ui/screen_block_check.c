@@ -171,8 +171,7 @@ lv_obj_t *screen_block_check_create(lv_obj_t *parent)
     s_grid = lv_obj_create(page);
     lv_obj_set_size(s_grid, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
     lv_obj_set_pos(s_grid, UI_CONTENT_LEFT, UI_CONTENT_TOP);
-    ui_apply_card_style(s_grid);
-    lv_obj_set_style_pad_all(s_grid, 0, 0);
+    ui_style_apply_card_flat(s_grid);
     lv_obj_add_flag(s_grid, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSING, NULL);

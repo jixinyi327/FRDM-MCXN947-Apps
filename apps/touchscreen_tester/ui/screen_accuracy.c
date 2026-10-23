@@ -49,11 +49,7 @@ static lv_obj_t *create_target_mark(lv_obj_t *parent, int32_t width, int32_t hei
     lv_obj_t *mark = lv_obj_create(parent);
 
     lv_obj_set_size(mark, width, height);
-    lv_obj_set_style_bg_color(mark, UI_COLOR_ACCENT, 0);
-    lv_obj_set_style_bg_opa(mark, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(mark, 0, 0);
-    lv_obj_set_style_radius(mark, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_pad_all(mark, 0, 0);
+    ui_style_apply_accuracy_mark(mark);
     lv_obj_remove_flag(mark, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_remove_flag(mark, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_align(mark, LV_ALIGN_CENTER, 0, 0);
@@ -258,18 +254,13 @@ lv_obj_t *screen_accuracy_create(lv_obj_t *parent)
     s_area = lv_obj_create(page);
     lv_obj_set_size(s_area, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
     lv_obj_set_pos(s_area, UI_CONTENT_LEFT, UI_CONTENT_TOP);
-    ui_apply_card_style(s_area);
-    lv_obj_set_style_pad_all(s_area, 0, 0);
+    ui_style_apply_card_flat(s_area);
     lv_obj_add_flag(s_area, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(s_area, area_event_cb, LV_EVENT_PRESSED, NULL);
 
     s_target = lv_obj_create(s_area);
     lv_obj_set_size(s_target, TARGET_SIZE, TARGET_SIZE);
-    lv_obj_set_style_bg_opa(s_target, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_color(s_target, UI_COLOR_ACCENT, 0);
-    lv_obj_set_style_border_width(s_target, 3, 0);
-    lv_obj_set_style_radius(s_target, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_pad_all(s_target, 0, 0);
+    ui_style_apply_accuracy_target(s_target);
     lv_obj_remove_flag(s_target, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_remove_flag(s_target, LV_OBJ_FLAG_CLICKABLE);
 

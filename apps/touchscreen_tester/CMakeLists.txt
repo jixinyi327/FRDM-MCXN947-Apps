@@ -30,6 +30,8 @@ mcux_add_source(
         ./ui/screen_settings.h
         ./ui/ui_common.c
         ./ui/ui_common.h
+        ./ui/ui_theme.c
+        ./ui/ui_theme.h
 )
 
 include(

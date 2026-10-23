@@ -52,8 +52,14 @@ static void update_coordinate_switch(bool animate)
     lv_anim_t animation;
     int32_t target_x = s_show_coordinates ? 26 : 2;
 
-    lv_obj_set_style_bg_color(s_coordinate_switch,
-                              s_show_coordinates ? UI_COLOR_ACCENT : UI_COLOR_BORDER, 0);
+    if (s_show_coordinates)
+    {
+        lv_obj_add_state(s_coordinate_switch, LV_STATE_CHECKED);
+    }
+    else
+    {
+        lv_obj_remove_state(s_coordinate_switch, LV_STATE_CHECKED);
+    }
 
     lv_anim_delete(s_coordinate_knob, knob_anim_cb);
     if (!animate)
@@ -89,8 +95,7 @@ static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
 
     lv_obj_set_size(card, UI_CONTENT_WIDTH, height);
     lv_obj_set_pos(card, UI_CONTENT_LEFT, y);
-    ui_apply_card_style(card);
-    lv_obj_set_style_pad_ver(card, 10, 0);
+    ui_style_apply_settings_card(card);
 
     return card;
 }
@@ -98,15 +103,17 @@ static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
 static void create_width_buttons(lv_obj_t *card)
 {
     static const char *labels[WIDTH_BUTTON_COUNT] = {"2", "4", "6"};
-    lv_obj_t *label = ui_create_label(card, "Draw line width", &lv_font_montserrat_16, UI_COLOR_INK);
+    lv_obj_t *label = ui_create_label(card, "Draw line width", UI_LABEL_BODY);
     uint32_t i;
 
     lv_obj_set_pos(label, 0, 7);
 
     for (i = 0; i < WIDTH_BUTTON_COUNT; i++)
     {
-        s_width_buttons[i] = ui_create_button(card, labels[i], 46, 34);
+        s_width_buttons[i] = ui_create_button_base(card, labels[i], 46, 34);
+        ui_style_apply_option_button(s_width_buttons[i]);
         lv_obj_set_pos(s_width_buttons[i], 250 + (int32_t)i * 54, 0);
+        lv_obj_set_ext_click_area(s_width_buttons[i], 4);
         lv_obj_add_event_cb(s_width_buttons[i], width_event_cb, LV_EVENT_CLICKED,
                             (void *)(uintptr_t)(2U + (i * 2U)));
     }
@@ -116,18 +123,15 @@ static void create_width_buttons(lv_obj_t *card)
 
 static void create_coordinate_switch(lv_obj_t *card)
 {
-    lv_obj_t *label = ui_create_label(card, "Show touch coordinates",
-                                      &lv_font_montserrat_16, UI_COLOR_INK);
+    lv_obj_t *label = ui_create_label(card, "Show touch coordinates", UI_LABEL_BODY);
 
     lv_obj_set_pos(label, 0, 5);
 
     s_coordinate_switch = lv_obj_create(card);
     lv_obj_set_size(s_coordinate_switch, 56, 30);
     lv_obj_set_pos(s_coordinate_switch, 346, 0);
-    lv_obj_set_style_radius(s_coordinate_switch, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_border_width(s_coordinate_switch, 0, 0);
-    lv_obj_set_style_bg_opa(s_coordinate_switch, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(s_coordinate_switch, 0, 0);
+    ui_style_apply_switch_track(s_coordinate_switch);
+    lv_obj_set_ext_click_area(s_coordinate_switch, 6);
     lv_obj_add_flag(s_coordinate_switch, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_remove_flag(s_coordinate_switch, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_event_cb(s_coordinate_switch, coordinate_switch_event_cb, LV_EVENT_CLICKED, NULL);
@@ -135,11 +139,7 @@ static void create_coordinate_switch(lv_obj_t *card)
     s_coordinate_knob = lv_obj_create(s_coordinate_switch);
     lv_obj_set_size(s_coordinate_knob, 26, 26);
     lv_obj_set_pos(s_coordinate_knob, 2, 2);
-    lv_obj_set_style_bg_color(s_coordinate_knob, lv_color_white(), 0);
-    lv_obj_set_style_bg_opa(s_coordinate_knob, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(s_coordinate_knob, 0, 0);
-    lv_obj_set_style_radius(s_coordinate_knob, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_pad_all(s_coordinate_knob, 0, 0);
+    ui_style_apply_switch_knob(s_coordinate_knob);
     lv_obj_remove_flag(s_coordinate_knob, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_remove_flag(s_coordinate_knob, LV_OBJ_FLAG_CLICKABLE);
 
@@ -149,15 +149,14 @@ static void create_coordinate_switch(lv_obj_t *card)
 
 static void create_shortcuts_card(lv_obj_t *card)
 {
-    lv_obj_t *label = ui_create_label(card, "Footer controls",
-                                      &lv_font_montserrat_16, UI_COLOR_INK);
+    lv_obj_t *label = ui_create_label(card, "Footer controls", UI_LABEL_BODY);
     lv_obj_t *description;
 
     lv_obj_set_pos(label, 0, 0);
 
     description = ui_create_label(card,
                                   "Reset targets this page | TAB opens the test list",
-                                  &lv_font_montserrat_16, UI_COLOR_MUTED);
+                                  UI_LABEL_MUTED);
     lv_obj_set_pos(description, 0, 24);
 }
 

@@ -9,7 +9,7 @@
 
 #include "ui_common.h"
 
-#define DRAW_CANVAS_WIDTH 408U
+#define DRAW_CANVAS_WIDTH 404U
 #define DRAW_CANVAS_HEIGHT 164U
 
 static uint8_t s_canvas_pixels[DRAW_CANVAS_WIDTH * DRAW_CANVAS_HEIGHT];
@@ -179,19 +179,18 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
     lv_obj_set_pos(canvas_frame,
                    UI_CONTENT_LEFT + (UI_CONTENT_WIDTH - (DRAW_CANVAS_WIDTH + 2)) / 2,
                    UI_CONTENT_TOP);
-    ui_apply_card_style(canvas_frame);
-    lv_obj_set_style_pad_all(canvas_frame, 0, 0);
-    lv_obj_set_style_radius(canvas_frame, 8, 0);
+    ui_style_apply_canvas_frame(canvas_frame);
+    lv_obj_remove_flag(canvas_frame, LV_OBJ_FLAG_SCROLLABLE);
 
     s_canvas = lv_canvas_create(canvas_frame);
     lv_obj_set_size(s_canvas, DRAW_CANVAS_WIDTH, DRAW_CANVAS_HEIGHT);
     lv_obj_set_pos(s_canvas, 0, 0);
     lv_canvas_set_buffer(s_canvas, s_canvas_pixels, DRAW_CANVAS_WIDTH, DRAW_CANVAS_HEIGHT,
                          LV_COLOR_FORMAT_L8);
-    lv_canvas_fill_bg(s_canvas, lv_color_white(), LV_OPA_COVER);
+    lv_canvas_fill_bg(s_canvas, UI_COLOR_SURFACE, LV_OPA_COVER);
     lv_obj_add_flag(s_canvas, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_remove_flag(s_canvas, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(s_canvas, 0, 0);
+    ui_style_apply_canvas(s_canvas);
     lv_obj_add_event_cb(s_canvas, canvas_event_cb, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(s_canvas, canvas_event_cb, LV_EVENT_PRESSING, NULL);
     lv_obj_add_event_cb(s_canvas, canvas_event_cb, LV_EVENT_RELEASED, NULL);
@@ -199,8 +198,8 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
 
     s_canvas_draw_buf = lv_canvas_get_draw_buf(s_canvas);
 
-    s_hint_label = ui_create_label(page, "Canvas 408 x 164  |  line width 4 px",
-                                   &lv_font_montserrat_16, UI_COLOR_MUTED);
+    s_hint_label = ui_create_label(page, "Canvas 404 x 164  |  line width 4 px",
+                                   UI_LABEL_MUTED);
     lv_obj_set_pos(s_hint_label, UI_CONTENT_LEFT, 224);
 
     ui_info_set(UI_PAGE_FREE_DRAW, "Free draw ready");
@@ -233,7 +232,7 @@ void screen_free_draw_set_line_width(uint8_t width)
         return;
     }
 
-    lv_snprintf(text, sizeof(text), "Canvas 408 x 164  |  line width %u px",
+    lv_snprintf(text, sizeof(text), "Canvas 404 x 164  |  line width %u px",
                 (unsigned)s_line_width);
     lv_label_set_text(s_hint_label, text);
     ui_info_set(UI_PAGE_FREE_DRAW, "Line width updated");

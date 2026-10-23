@@ -30,9 +30,9 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           384,336 B
-m_data:           279,560 B / 312 KiB
-static RAM:       279,560 B
+m_text:           386,648 B
+m_data:           279,448 B / 312 KiB
+static RAM:       279,456 B
 audit failures:         0
 ```
 
@@ -80,12 +80,29 @@ Touchscreen tester started: 480x320, 16 ms UI cadence
 - footer and both action buttons increased from 36 px to 48 px high;
 - the information area now contains a primary status row and a muted detail row;
 - shared test content increased from 440x184 to 456x198;
-- free-draw canvas increased from 400x160 to 408x164 to retain RAM headroom;
+- free-draw canvas increased from 400x160 to 404x164 to retain RAM headroom;
 - the display pipeline, TE mode and 16 ms UI cadence are unchanged;
 - static RAM is 279,560 B, below the 280,000 B audit warning threshold;
 - build, audit, flash and startup checks pass;
 - two-line readability and expanded test-area usability remain pending physical
   confirmation.
+
+## UI Skill Refactor
+
+- moved color/font/geometry visual rules into `ui_theme.c/.h`;
+- added reusable pressed, focused, disabled and checked state styles;
+- added style transitions for state changes;
+- converted menu selection, option selection and coordinate switch to
+  `LV_STATE_CHECKED`;
+- added extended touch hit areas to the 46x34 line-width buttons and 56x30
+  coordinate switch;
+- added a cancelable reset confirmation panel for the destructive Reset action;
+- retained inline style setters only for animation progress and explicit
+  transient visibility;
+- the code structure audit reports no color constructs outside the theme module;
+- static RAM is 279,456 B, below the 280,000 B audit warning threshold;
+- build and board/display audits pass; physical modal, state and touch feedback
+  remain pending user confirmation.
 
 ## Physical Visual Evidence
 
@@ -96,6 +113,8 @@ Pending user observation:
 - two-minute continuous drawing;
 - footer alignment, equal button sizes and information updates;
 - two-line information readability without clipping;
+- reusable pressed/focused/checked states and transition consistency;
+- reset confirmation cancel, backdrop-cancel and confirm paths;
 - menu open/close return path;
 - forward and backward page transitions;
 - bad-block grid coverage;
