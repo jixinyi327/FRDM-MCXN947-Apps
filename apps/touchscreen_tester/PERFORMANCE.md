@@ -30,7 +30,7 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           433,096 B
+m_text:           433,920 B
 m_data:           279,528 B / 312 KiB
 static RAM:       279,536 B
 audit failures:         0
@@ -107,6 +107,7 @@ Touchscreen tester started: 480x320, 16 ms UI cadence
 ## Chinese/English Localization
 
 - default startup language is Chinese;
+- LVGL text encoding is UTF-8; ASCII text encoding is disabled;
 - all visible UI copy is resolved through `ui_i18n.c` translation IDs;
 - a settings button toggles between Chinese and English;
 - the theme switches between Montserrat and generated Source Han Sans subsets;
