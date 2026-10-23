@@ -1,0 +1,15 @@
+diff --git a/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c b/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
+--- a/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
++++ b/lvgl_examples/lvgl_guider_bm/lvgl_guider_bm.c
+@@ -22,9 +22,9 @@
+ #define LVGL_TICK_MS 1U
+ #endif
+ 
+-/* lv_task_handler is called every 5-tick. */
++/* Limit UI refresh and touch processing to about 30 FPS. */
+ #ifndef LVGL_TASK_PERIOD_TICK
+-#define LVGL_TASK_PERIOD_TICK 5U
++#define LVGL_TASK_PERIOD_TICK 33U
+ #endif
+ 
+ /*******************************************************************************

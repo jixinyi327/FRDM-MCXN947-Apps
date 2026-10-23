@@ -87,6 +87,14 @@ the previous buffer is being transferred.
 The completion callback also guards against notifying LVGL before its display
 object exists, which avoids a HardFault during the initial LCD clear.
 
+## Revision 0006: 30 FPS UI cadence
+
+The GUI task handler was invoked every 5 ms, while the 320x480 panel is updated
+through FlexIO and a large dragged object invalidates both its old and new
+areas. This patch changes the default task cadence to 33 ms (about 30 FPS),
+reducing CPU, bus and memory-bandwidth load during drag without adding RAM.
+
+
 
 
 
