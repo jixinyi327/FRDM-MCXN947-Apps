@@ -30,9 +30,9 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           382,760 B
-m_data:           276,264 B / 312 KiB
-static RAM:       276,272 B
+m_text:           383,612 B
+m_data:           276,376 B / 312 KiB
+static RAM:       276,384 B
 audit failures:         0
 ```
 
@@ -61,6 +61,20 @@ Touchscreen tester started: 480x320, 16 ms UI cadence
 - physical footer alignment and information readability remain pending user
   confirmation.
 
+## Accuracy Error Feedback Revision
+
+- the visible target ring defines the hit region;
+- a hit advances the target with the existing 260 ms ease-in-out motion;
+- a miss keeps the current target in place so the user can immediately retry;
+- the information bar reports `MISS` and the measured distance;
+- the target shakes for 360 ms with a decaying 10 px oscillation;
+- the target and crosshair blend from the normal accent color to danger red and
+  back to the normal color;
+- feedback only invalidates the small target area and does not alter the display
+  pipeline;
+- build, audit, flash and startup checks pass; physical shake/color timing remains
+  pending user confirmation.
+
 ## Physical Visual Evidence
 
 Pending user observation:
@@ -73,6 +87,7 @@ Pending user observation:
 - forward and backward page transitions;
 - bad-block grid coverage;
 - accuracy target movement and statistics;
+- accuracy miss shake, red flash and automatic color recovery;
 - recovery immediately after motion stops.
 
 ## Decision
