@@ -102,6 +102,7 @@ west flash -d build/hello_world_core0 -r linkserver
 | 目录 | 内容 |
 |---|---|
 | [屏幕选型与适配](屏幕选型与适配/README.md) | LCD-PAR-S035 详细分析、屏幕选型、FRDM 硬件连接、ST7796S/GT911/LVGL 集成、点亮验收和量产风险 |
+| [触摸屏测试工程](../apps/touchscreen_tester/README.md) | 自由绘制、坏块检测、点击精度、设置页及性能验收 |
 
 ## 辅助脚本
 

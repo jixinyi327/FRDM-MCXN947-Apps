@@ -1,0 +1,221 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include "screen_block_check.h"
+
+#include <stdint.h>
+
+#include "ui_common.h"
+
+#define GRID_COLUMNS 12U
+#define GRID_ROWS 7U
+#define GRID_CELLS (GRID_COLUMNS * GRID_ROWS)
+#define GRID_MARGIN 8
+#define GRID_GAP 2
+
+static lv_obj_t *s_grid;
+static lv_obj_t *s_status_label;
+static uint32_t s_touched[3];
+static uint16_t s_touched_count;
+
+static bool cell_is_touched(uint16_t index)
+{
+    return (s_touched[index >> 5U] & (1UL << (index & 31U))) != 0U;
+}
+
+static void set_cell_touched(uint16_t index)
+{
+    s_touched[index >> 5U] |= (1UL << (index & 31U));
+}
+
+static void grid_cell_size(int32_t *cell_width, int32_t *cell_height)
+{
+    *cell_width = (UI_CONTENT_WIDTH - (GRID_MARGIN * 2) -
+                   ((int32_t)GRID_COLUMNS - 1) * GRID_GAP) / (int32_t)GRID_COLUMNS;
+    *cell_height = (UI_CONTENT_HEIGHT - (GRID_MARGIN * 2) -
+                    ((int32_t)GRID_ROWS - 1) * GRID_GAP) / (int32_t)GRID_ROWS;
+}
+
+static void update_status(void)
+{
+    char text[64];
+
+    if (s_touched_count == GRID_CELLS)
+    {
+        lv_label_set_text(s_status_label, "Full grid coverage reached");
+        lv_obj_set_style_text_color(s_status_label, UI_COLOR_ACCENT, 0);
+    }
+    else
+    {
+        lv_snprintf(text, sizeof(text), "Covered %u / %u cells",
+                    (unsigned)s_touched_count, (unsigned)GRID_CELLS);
+        lv_label_set_text(s_status_label, text);
+        lv_obj_set_style_text_color(s_status_label, UI_COLOR_MUTED, 0);
+    }
+}
+
+static void grid_draw_cb(lv_event_t *event)
+{
+    lv_obj_t *grid = lv_event_get_target_obj(event);
+    lv_layer_t *layer = lv_event_get_layer(event);
+    lv_area_t object_coords;
+    lv_draw_rect_dsc_t rect_dsc;
+    int32_t cell_width;
+    int32_t cell_height;
+    uint32_t row;
+    uint32_t column;
+
+    lv_obj_get_coords(grid, &object_coords);
+    grid_cell_size(&cell_width, &cell_height);
+    lv_draw_rect_dsc_init(&rect_dsc);
+    rect_dsc.radius = 3;
+    rect_dsc.border_width = 1;
+    rect_dsc.border_color = UI_COLOR_BORDER;
+
+    for (row = 0; row < GRID_ROWS; row++)
+    {
+        for (column = 0; column < GRID_COLUMNS; column++)
+        {
+            uint16_t index = (uint16_t)(row * GRID_COLUMNS + column);
+            lv_area_t cell;
+
+            cell.x1 = object_coords.x1 + GRID_MARGIN + (int32_t)column * (cell_width + GRID_GAP);
+            cell.y1 = object_coords.y1 + GRID_MARGIN + (int32_t)row * (cell_height + GRID_GAP);
+            cell.x2 = cell.x1 + cell_width - 1;
+            cell.y2 = cell.y1 + cell_height - 1;
+
+            rect_dsc.bg_opa = LV_OPA_COVER;
+            rect_dsc.bg_color = cell_is_touched(index) ? UI_COLOR_ACCENT : UI_COLOR_SURFACE;
+            rect_dsc.border_color = cell_is_touched(index) ? UI_COLOR_ACCENT : UI_COLOR_BORDER;
+            lv_draw_rect(layer, &rect_dsc, &cell);
+        }
+    }
+}
+
+static void mark_at_point(lv_point_t point)
+{
+    lv_area_t object_coords;
+    lv_area_t changed_area;
+    int32_t cell_width;
+    int32_t cell_height;
+    int32_t local_x;
+    int32_t local_y;
+    int32_t column;
+    int32_t row;
+    uint16_t index;
+
+    lv_obj_get_coords(s_grid, &object_coords);
+    grid_cell_size(&cell_width, &cell_height);
+    local_x = point.x - object_coords.x1 - GRID_MARGIN;
+    local_y = point.y - object_coords.y1 - GRID_MARGIN;
+
+    if ((local_x < 0) || (local_y < 0))
+    {
+        return;
+    }
+
+    column = local_x / (cell_width + GRID_GAP);
+    row = local_y / (cell_height + GRID_GAP);
+    if ((column >= (int32_t)GRID_COLUMNS) || (row >= (int32_t)GRID_ROWS))
+    {
+        return;
+    }
+
+    if (((local_x % (cell_width + GRID_GAP)) >= cell_width) ||
+        ((local_y % (cell_height + GRID_GAP)) >= cell_height))
+    {
+        return;
+    }
+
+    index = (uint16_t)(row * (int32_t)GRID_COLUMNS + column);
+    if (!cell_is_touched(index))
+    {
+        set_cell_touched(index);
+        s_touched_count++;
+        update_status();
+    }
+
+    changed_area.x1 = object_coords.x1 + GRID_MARGIN +
+                      column * (cell_width + GRID_GAP) - 1;
+    changed_area.y1 = object_coords.y1 + GRID_MARGIN +
+                      row * (cell_height + GRID_GAP) - 1;
+    changed_area.x2 = changed_area.x1 + cell_width + 1;
+    changed_area.y2 = changed_area.y1 + cell_height + 1;
+    lv_obj_invalidate_area(s_grid, &changed_area);
+}
+
+static void grid_event_cb(lv_event_t *event)
+{
+    lv_event_code_t code = lv_event_get_code(event);
+
+    if ((code == LV_EVENT_PRESSED) || (code == LV_EVENT_PRESSING))
+    {
+        lv_point_t point;
+
+        lv_indev_get_point(lv_indev_active(), &point);
+        mark_at_point(point);
+    }
+    else if (code == LV_EVENT_DRAW_MAIN_END)
+    {
+        grid_draw_cb(event);
+    }
+}
+
+static void reset_event_cb(lv_event_t *event)
+{
+    LV_UNUSED(event);
+    screen_block_check_reset();
+}
+
+lv_obj_t *screen_block_check_create(lv_obj_t *parent)
+{
+    lv_obj_t *page = ui_create_page(parent);
+    lv_obj_t *instruction;
+    lv_obj_t *reset_button;
+
+    ui_create_header(page, "Block Check", "Sweep every cell and watch for untouched regions");
+
+    reset_button = ui_create_button(page, "Reset", 82, 34);
+    lv_obj_align(reset_button, LV_ALIGN_TOP_RIGHT, -20, 8);
+    lv_obj_add_event_cb(reset_button, reset_event_cb, LV_EVENT_CLICKED, NULL);
+
+    s_grid = lv_obj_create(page);
+    lv_obj_set_size(s_grid, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
+    lv_obj_set_pos(s_grid, UI_CONTENT_LEFT, UI_CONTENT_TOP);
+    ui_apply_card_style(s_grid);
+    lv_obj_set_style_pad_all(s_grid, 0, 0);
+    lv_obj_add_flag(s_grid, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSING, NULL);
+    lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_DRAW_MAIN_END, NULL);
+
+    s_status_label = ui_create_label(page, "Covered 0 / 84 cells",
+                                     &lv_font_montserrat_16, UI_COLOR_MUTED);
+    lv_obj_set_pos(s_status_label, UI_CONTENT_LEFT, 246);
+
+    instruction = ui_create_label(page, "Unfilled cells remain untested",
+                                  &lv_font_montserrat_16, UI_COLOR_MUTED);
+    lv_obj_align(instruction, LV_ALIGN_BOTTOM_RIGHT, -96, -22);
+    LV_UNUSED(instruction);
+
+    screen_block_check_reset();
+    return page;
+}
+
+void screen_block_check_reset(void)
+{
+    s_touched[0] = 0U;
+    s_touched[1] = 0U;
+    s_touched[2] = 0U;
+    s_touched_count = 0U;
+
+    if (s_status_label != NULL)
+    {
+        update_status();
+    }
+    if (s_grid != NULL)
+    {
+        lv_obj_invalidate(s_grid);
+    }
+}

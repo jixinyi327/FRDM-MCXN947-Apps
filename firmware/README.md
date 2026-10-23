@@ -10,6 +10,7 @@ Project-specific fixes are kept as patches so the SDK remains reproducible.
 - Example: `examples/lvgl_examples/lvgl_guider_bm`
 - Display: LCD-PAR-S035 / ST7796S
 - Touch: GT911
+- Tracked test application: `../apps/touchscreen_tester`
 
 ## Apply display optimization
 

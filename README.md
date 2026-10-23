@@ -9,6 +9,7 @@
 - 已编译验证的示例：`mcuxpresso-sdk/build/hello_world_core0/`
 - LCD-PAR-S035 专题：[屏幕选型与适配](开发计划/屏幕选型与适配/README.md)
 - UI 性能 Skill：[skills/frdm-mcxn947-lvgl-ui-performance](skills/frdm-mcxn947-lvgl-ui-performance/SKILL.md)
+- 触摸屏测试工程：[apps/touchscreen_tester](apps/touchscreen_tester/README.md)
 
 快速检查环境：
 
