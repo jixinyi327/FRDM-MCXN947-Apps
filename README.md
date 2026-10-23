@@ -8,6 +8,7 @@
 - 原始资料与补充参考手册：`docs/`
 - 已编译验证的示例：`mcuxpresso-sdk/build/hello_world_core0/`
 - LCD-PAR-S035 专题：[屏幕选型与适配](开发计划/屏幕选型与适配/README.md)
+- LVGL UI 设计与工程 Skill：[skills/lvgl-ui](skills/lvgl-ui/SKILL.md)
 - UI 性能 Skill：[skills/frdm-mcxn947-lvgl-ui-performance](skills/frdm-mcxn947-lvgl-ui-performance/SKILL.md)
 - 触摸屏测试工程：[apps/touchscreen_tester](apps/touchscreen_tester/README.md)
 
@@ -44,6 +45,22 @@ Use $frdm-mcxn947-lvgl-ui-performance to review this LVGL screen change.
 ```bash
 bash skills/frdm-mcxn947-lvgl-ui-performance/scripts/audit_ui_config.sh
 bash skills/frdm-mcxn947-lvgl-ui-performance/scripts/build_ui.sh
+```
+
+## LVGL UI Skill
+
+界面信息架构、设计令牌、组件状态、焦点、命中区、资源预算和工程命名统一使用
+`$lvgl-ui`。它和性能 Skill 分工明确：`lvgl-ui` 管界面设计与维护性，
+`$frdm-mcxn947-lvgl-ui-performance` 管本板的显示链路与时序。
+
+```text
+Use $lvgl-ui to design or review this LVGL interface.
+```
+
+结构审计：
+
+```bash
+LVGL_UI_INPUT=touch bash skills/lvgl-ui/scripts/audit_lvgl_ui.sh apps/touchscreen_tester/ui
 ```
 
 ## Git repository scope
