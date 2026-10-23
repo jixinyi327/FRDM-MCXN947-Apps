@@ -69,13 +69,24 @@ strip per display frame and caused long drags to become slow. This revision:
 - increases the partial buffer from 1/10 to 1/4 of the screen height;
 - restores the TE-wait state on the last flush of the update.
 
-Apply all four patches in numeric order.
+Apply all five patches in numeric order.
 
 ## Revision 0004: TE horizontal + vertical blanking
 
 This experiment changes TE output from V-blank only to both H-blank and V-blank.
 It keeps memory usage and flush batching unchanged while making synchronization
 pulses more frequent.
+
+## Revision 0005: asynchronous partial-buffer pipeline
+
+This revision returns to V-blank TE synchronization and removes the blocking
+wait from the LVGL flush callback. SmartDMA completion now releases the active
+LVGL buffer, allowing LVGL to render into the alternate 1/4-screen buffer while
+the previous buffer is being transferred.
+
+The completion callback also guards against notifying LVGL before its display
+object exists, which avoids a HardFault during the initial LCD clear.
+
 
 
 

@@ -1,0 +1,76 @@
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+index 24589c3..3a8af0c 100644
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+@@ -68,6 +68,7 @@ static void DEMO_CheckChipRevision(void);
+ static gt911_handle_t touchHandle;
+ static volatile bool s_touchPending = false;
+ static volatile bool s_teSyncPending = true;
++static lv_display_t *s_display = NULL;
+ 
+ #if (LV_USE_GESTURE_RECOGNITION == 1)
+ /* An array that stores the collected touch events */
+@@ -212,6 +213,12 @@ static void DEMO_DbiMemoryDoneCallback(status_t status, void *userData)
+ #else
+     s_memWriteDone = true;
+ #endif
++
++    if (NULL != s_display)
++    {
++        lv_display_flush_ready(s_display);
++    }
++
+ }
+ 
+ void DEMO_LCD_I2C_Init(void)
+@@ -400,7 +407,7 @@ status_t DEMO_InitLcdController(void)
+     const st7796s_config_t st7796sConfig = {.driverPreset    = kST7796S_DriverPresetLCDPARS035,
+                                             .pixelFormat     = kST7796S_PixelFormatRGB565,
+                                             .orientationMode = kST7796S_Orientation270,
+-                                            .teConfig        = kST7796S_TEHVSync,
++                                            .teConfig        = kST7796s_TEVSync,
+                                             .invertDisplay   = true,
+                                             .flipDisplay     = true,
+                                             .bgrFilter       = true};
+@@ -577,28 +584,17 @@ static void DEMO_FlushDisplay(lv_display_t *disp_drv, const lv_area_t *area, uin
+     s_memWriteDone = false;
+ #endif
+ 
+-    ST7796S_WritePixels(&lcdHandle, (uint16_t *)color_p, length / LCD_FB_BYTE_PER_PIXEL);
+-
+-#if defined(SDK_OS_FREE_RTOS)
+-    if (xSemaphoreTake(s_memWriteDone, portMAX_DELAY) != pdTRUE)
+-    {
+-        PRINTF("Wait semaphore error: s_memWriteDone\r\n");
+-        assert(0);
+-    }
+-#else
+-    while (!s_memWriteDone)
++    if (kStatus_Success !=
++        ST7796S_WritePixels(&lcdHandle, (uint16_t *)color_p, length / LCD_FB_BYTE_PER_PIXEL))
+     {
++        lv_display_flush_ready(disp_drv);
++        return;
+     }
+-#endif
+ 
+     if (lv_display_flush_is_last(disp_drv))
+     {
+         s_teSyncPending = true;
+     }
+-
+-    /* IMPORTANT!!!
+-     * Inform the graphics library that you are ready with the flushing*/
+-    lv_disp_flush_ready(disp_drv);
+ }
+ 
+ void lv_port_disp_init(void)
+@@ -615,7 +611,7 @@ void lv_port_disp_init(void)
+     DEMO_InitLcd();
+ 
+     disp_drv = lv_display_create(LCD_WIDTH, LCD_HEIGHT);
+-
++    s_display = disp_drv;
+ #if (CONFIG_LVGL_SUPPORT_VDB_COUNT == 2)
+     lv_display_set_buffers(disp_drv, (void*)s_frameBuffer[0], (void*)s_frameBuffer[1], sizeof(s_frameBuffer[0]), LV_DISPLAY_RENDER_MODE_PARTIAL);
+ #else
