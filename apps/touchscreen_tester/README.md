@@ -33,6 +33,8 @@ Reset 会先打开确认面板，用户可取消或确认，避免误触清空�
 
 工程固定启用 `CONFIG_LV_TXT_ENC_UTF8=y`。中文源码必须保持 UTF-8 编码并禁用
 `LV_TXT_ENC_ASCII`，否则 LVGL 会把中文 UTF-8 字节当作缺字方框。
+同时启用 `CONFIG_LV_USE_FONT_COMPRESSED=y`，与 `lv_font_conv` 默认生成的
+压缩字形格式匹配；缺少该选项时中文会显示为空白。
 
 翻译文本集中在 `ui_i18n.c`。修改中文文案后运行：
 
