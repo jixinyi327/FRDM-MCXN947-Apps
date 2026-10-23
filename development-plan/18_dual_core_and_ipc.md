@@ -22,7 +22,7 @@ MCXN947 有两个 150 MHz Cortex-M33。常见划分：
 ## 2. 当前构建识别
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 west boards -b frdmmcxn947
 ```

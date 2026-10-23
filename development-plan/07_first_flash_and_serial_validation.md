@@ -45,7 +45,7 @@
 ## 4. 检查 LinkServer
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 LinkServer probes
 ```
 
@@ -68,7 +68,7 @@ MCXN9XX  MCXN947  FRDM-MCXN947  cm33_core0, [cm33_core1]
 ## 5. 编译示例
 
 ```bash
-bash /home/jxy/NXP/MCXN947/开发计划/scripts/build_hello.sh
+bash /home/jxy/NXP/MCXN947/development-plan/scripts/build_hello.sh
 ```
 
 当前 SDK 仓库的正确路径是 `mcuxsdk/examples/demo_apps/hello_world`。不要把 core 写进 board 目录：
@@ -84,7 +84,7 @@ west build -b frdmmcxn947@cm33_core0 ...
 ## 6. 烧录
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 west flash -d build/hello_world_core0 -r linkserver
 ```
@@ -96,7 +96,7 @@ west flash -d build/hello_world_core0 -r linkserver
 最简单方式：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/开发计划/scripts/monitor.sh
+bash /home/jxy/NXP/MCXN947/development-plan/scripts/monitor.sh
 ```
 
 VS Code 也可使用 Serial Monitor：

@@ -1,4 +1,4 @@
-# 屏幕选型与适配
+# Display Selection and Integration
 
 本目录针对 FRDM-MCXN947 的显示和触摸方案，先详细分析现有的 LCD-PAR-S035，再给出后续屏幕选型、硬件连接、驱动移植、LVGL 集成、点亮验收和量产风险控制方法。
 
@@ -15,21 +15,21 @@
 
 | 文档 | 内容 |
 |---|---|
-| [01_LCD_PAR_S035详细分析.md](01_LCD_PAR_S035详细分析.md) | 面板、触摸、转接板、电源、接口、SDK 支持与限制 |
-| [02_屏幕选型决策指南.md](02_屏幕选型决策指南.md) | 尺寸、分辨率、接口、内存、触摸、环境、生命周期与评分方法 |
-| [03_FRDM_MCXN947硬件适配.md](03_FRDM_MCXN947硬件适配.md) | J8 并口、Pmod SPI、SW1、引脚、电源和背光 |
-| [04_驱动移植与LVGL集成.md](04_驱动移植与LVGL集成.md) | ST7796S/GT911/FlexIO/SmartDMA/LVGL 的代码结构 |
-| [05_点亮触摸与验收流程.md](05_点亮触摸与验收流程.md) | 从组装到显示、触摸、性能、稳定性验收 |
-| [06_排障与量产风险.md](06_排障与量产风险.md) | 黑屏、花屏、方向、触摸、EMC、供应与生产问题 |
-| [07_屏幕需求与评估模板.md](07_屏幕需求与评估模板.md) | 新项目选型表、接口预算和验收门槛模板 |
-| [08_双核UI架构规划.md](08_双核UI架构规划.md) | Core0 UI 核与 Core1 功能核的职责、通信和资源规划 |
+| [01_lcd_par_s035_analysis.md](01_lcd_par_s035_analysis.md) | 面板、触摸、转接板、电源、接口、SDK 支持与限制 |
+| [02_display_selection_guide.md](02_display_selection_guide.md) | 尺寸、分辨率、接口、内存、触摸、环境、生命周期与评分方法 |
+| [03_frdm_mcxn947_hardware_integration.md](03_frdm_mcxn947_hardware_integration.md) | J8 并口、Pmod SPI、SW1、引脚、电源和背光 |
+| [04_driver_porting_and_lvgl_integration.md](04_driver_porting_and_lvgl_integration.md) | ST7796S/GT911/FlexIO/SmartDMA/LVGL 的代码结构 |
+| [05_power_on_touch_and_acceptance.md](05_power_on_touch_and_acceptance.md) | 从组装到显示、触摸、性能、稳定性验收 |
+| [06_troubleshooting_and_production_risks.md](06_troubleshooting_and_production_risks.md) | 黑屏、花屏、方向、触摸、EMC、供应与生产问题 |
+| [07_display_requirements_and_evaluation_template.md](07_display_requirements_and_evaluation_template.md) | 新项目选型表、接口预算和验收门槛模板 |
+| [08_dual_core_ui_architecture.md](08_dual_core_ui_architecture.md) | Core0 UI 核与 Core1 功能核的职责、通信和资源规划 |
 
 ## 当前平台推荐
 
 ### 方案 A：LCD-PAR-S035 直接评估
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \

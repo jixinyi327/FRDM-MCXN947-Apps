@@ -34,7 +34,7 @@
 ## 3. LinkServer 看不到探针
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 LinkServer probes
 ```
 

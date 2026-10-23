@@ -11,5 +11,9 @@
 - Preserve the verified display ownership, RAM budget, TE synchronization,
   partial buffering and dual-core boundaries documented by that skill.
 - Do not edit generated LVGL or GUI Guider C/H files by hand.
+- Keep tracked directory and file names ASCII and descriptive; Chinese belongs in
+  document content and UI strings, not repository paths.
+- Run `bash development-plan/scripts/check_naming.sh` when adding or renaming
+  tracked files.
 - Build and flash alone do not prove visual correctness; request physical
   slow-drag and fast-drag confirmation from the user when the panel is involved.

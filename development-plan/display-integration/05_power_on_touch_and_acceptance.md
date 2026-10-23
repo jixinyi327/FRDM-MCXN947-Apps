@@ -34,7 +34,7 @@
 ## 4. 编译和烧录
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \

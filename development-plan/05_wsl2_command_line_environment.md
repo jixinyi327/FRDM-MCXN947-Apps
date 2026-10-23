@@ -19,7 +19,7 @@
 ## 2. 每次打开终端的初始化
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 ```
 
 该脚本设置：
@@ -31,7 +31,7 @@ source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
 可随时检查环境：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/开发计划/scripts/check_env.sh
+bash /home/jxy/NXP/MCXN947/development-plan/scripts/check_env.sh
 ```
 
 当前已验证的核心输出：
@@ -167,7 +167,7 @@ LinkServer 的规则文件位于：
 在可输入 sudo 密码时执行：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/开发计划/scripts/install_udev_rules.sh
+bash /home/jxy/NXP/MCXN947/development-plan/scripts/install_udev_rules.sh
 ```
 
 当前用户属于 `dialout`、`plugdev`，这对串口有帮助，但不能替代调试器 udev 规则。若 LinkServer 只能以 root 访问探针，不要长期用 root 开发，应修正 udev 规则。
@@ -175,7 +175,7 @@ bash /home/jxy/NXP/MCXN947/开发计划/scripts/install_udev_rules.sh
 ## 6. 构建验证
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \
@@ -187,7 +187,7 @@ west build -b frdmmcxn947 \
 也可直接运行：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/开发计划/scripts/build_hello.sh
+bash /home/jxy/NXP/MCXN947/development-plan/scripts/build_hello.sh
 ```
 
 已构建结果：

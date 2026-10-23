@@ -15,7 +15,7 @@ Project-specific fixes are kept as patches so the SDK remains reproducible.
 ## Apply display optimization
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 
 git -C "$MCXN_SDK/mcuxsdk/examples" apply \
   /home/jxy/NXP/MCXN947/firmware/patches/0001-fix-lvgl-partial-buffer-size.patch

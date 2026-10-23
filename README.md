@@ -1,9 +1,12 @@
-# FRDM-MCXN947 Touchscreen Tester
+# FRDM-MCXN947 Apps
 
-FRDM-MCXN947 + LCD-PAR-S035 触摸屏测试工程。项目包含可复现的开发环境说明、
-MCUXpresso SDK 补丁、LVGL UI Skill，以及运行在 `cm33_core0` 上的触摸屏测试应用。
+面向 FRDM-MCXN947 + LCD-PAR-S035 的多应用开发仓库。仓库包含可复现的开发环境、
+MCUXpresso SDK 补丁、LVGL UI Skill，以及可复用的应用构建和烧写流程。
 
-当前应用功能：
+`apps/touchscreen_tester/` 是仓库中的第一个应用，运行在 `cm33_core0`。后续应用统一放在
+`apps/<app_name>/`，各自拥有独立的 `README.md`、构建入口和资源配置。
+
+触摸屏测试应用当前功能：
 
 - 自由绘制；
 - 触摸坏块检测；
@@ -44,13 +47,20 @@ git push -u origin main
 ├── skills/lvgl-ui/           LVGL UI 设计、本地化和工程规范
 ├── skills/frdm-mcxn947-lvgl-ui-performance/
 │                             本板显示性能与刷新约束
-├── 开发计划/                 环境、外设、硬件和排障文档
+├── development-plan/         环境、外设、硬件和排障文档
 ├── mcuxpresso-sdk/           本地 SDK，Git 忽略
 ├── toolchains/               本地 Arm GCC，Git 忽略
 └── .venv/                    west/CMake/Ninja/Python 工具，Git 忽略
 ```
 
 应用说明：[apps/touchscreen_tester/README.md](apps/touchscreen_tester/README.md)
+
+仓库约定：
+
+- 目录和文件名使用 ASCII、小写描述性英文；中文保留在文档内容和界面文案中；
+- 每个应用必须有独立构建入口，不与 SDK 或其他应用共享生成产物；
+- 公共 UI、板级驱动和多应用共用代码通过明确模块复用，不从其他应用目录反向引用；
+- 提交前运行 `bash development-plan/scripts/check_naming.sh` 检查路径命名。
 
 ## 硬件准备
 
@@ -73,7 +83,7 @@ git push -u origin main
 
 ```bash
 cd <repository-directory>
-bash 开发计划/scripts/manage_dev_env.sh
+bash development-plan/scripts/manage_dev_env.sh
 ```
 
 交互菜单提供：
@@ -92,18 +102,18 @@ Linux x86_64 版本，因此原生 Windows 必须使用 WSL2，ARM64 主机不�
 
 ```bash
 # 只检查，不修改文件
-bash 开发计划/scripts/manage_dev_env.sh --check
+bash development-plan/scripts/manage_dev_env.sh --check
 
 # SSH 检查更新
-bash 开发计划/scripts/manage_dev_env.sh \
+bash development-plan/scripts/manage_dev_env.sh \
   --check-updates --transport ssh --no-input
 
 # SSH 更新当前 SDK；如果 SDK 有本地改动会拒绝执行
-bash 开发计划/scripts/manage_dev_env.sh \
+bash development-plan/scripts/manage_dev_env.sh \
   --update --transport ssh
 
 # 不动当前 SDK，创建独立新版工作区
-bash 开发计划/scripts/manage_dev_env.sh \
+bash development-plan/scripts/manage_dev_env.sh \
   --fresh --transport ssh
 ```
 
@@ -197,7 +207,7 @@ west update_board --set board frdmmcxn947
 ```
 
 SDK 完整同步约 7.8 GB，下载时间取决于网络。详细流程见
-[WSL2 命令行环境](开发计划/05_WSL2命令行环境.md)。
+[WSL2 命令行环境](development-plan/05_wsl2_command_line_environment.md)。
 
 ### 6. LinkServer 26.9.130
 
@@ -225,13 +235,13 @@ dpkg-deb -x \
 
 ```bash
 cd "$WORKSPACE"
-source 开发计划/scripts/env.sh
+source development-plan/scripts/env.sh
 ```
 
 检查工具和板卡：
 
 ```bash
-bash 开发计划/scripts/check_env.sh
+bash development-plan/scripts/check_env.sh
 ```
 
 ## WSL2 USB 直通
@@ -256,7 +266,7 @@ ls -l /dev/ttyACM* /dev/ttyUSB*
 重新插拔开发板或重启 WSL 后，通常需要重新执行 `usbipd attach`。
 
 如调试器权限不足，按
-[WSL2 命令行环境](开发计划/05_WSL2命令行环境.md#5-udev-权限) 安装 udev 规则。
+[WSL2 命令行环境](development-plan/05_wsl2_command_line_environment.md#5-udev-权限) 安装 udev 规则。
 
 ## 构建
 
@@ -269,7 +279,7 @@ cd "$WORKSPACE"
 
 脚本会：
 
-1. 从 `开发计划/scripts/env.sh` 加载固定工具链；
+1. 从 `development-plan/scripts/env.sh` 加载固定工具链；
 2. 用 west 为 `frdmmcxn947`、`cm33_core0` 构建应用；
 3. 输出 ELF/BIN；
 4. 自动执行 UI 配置审计。
@@ -285,7 +295,7 @@ mcuxpresso-sdk/build/touchscreen_tester_core0/touchscreen_tester_cm33_core0.bin
 
 ```bash
 cd "$WORKSPACE"
-source 开发计划/scripts/env.sh
+source development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \
@@ -309,7 +319,7 @@ cd "$WORKSPACE"
 
 ```bash
 cd "$WORKSPACE"
-source 开发计划/scripts/env.sh
+source development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 west flash -d build/touchscreen_tester_core0 -r linkserver
 ```
@@ -341,7 +351,7 @@ LinkServer flash \
 运行：
 
 ```bash
-bash 开发计划/scripts/monitor.sh
+bash development-plan/scripts/monitor.sh
 ```
 
 复位后应看到：
@@ -391,7 +401,7 @@ west 必须在 SDK 工作区内运行。先执行：
 
 ```bash
 cd "$WORKSPACE/mcuxpresso-sdk"
-source ../开发计划/scripts/env.sh
+source ../development-plan/scripts/env.sh
 ```
 
 使用应用脚本时可直接从仓库根目录运行，不需要手动进入 SDK。
@@ -432,9 +442,9 @@ LinkServer reset 'MCXN947:FRDM-MCXN947' -p <probe> --ms 250 --update-mode none
 
 ## 相关文档
 
-- [开发计划总览](开发计划/README.md)
-- [首次烧录与串口验证](开发计划/07_首次烧录与串口验证.md)
-- [SDK 工程与构建系统](开发计划/08_SDK工程与构建系统.md)
-- [屏幕选型与适配](开发计划/屏幕选型与适配/README.md)
+- [开发计划总览](development-plan/README.md)
+- [首次烧录与串口验证](development-plan/07_first_flash_and_serial_validation.md)
+- [SDK 工程与构建系统](development-plan/08_sdk_projects_and_build_system.md)
+- [屏幕选型与适配](development-plan/display-integration/README.md)
 - [应用详细说明](apps/touchscreen_tester/README.md)
 - [性能记录](apps/touchscreen_tester/PERFORMANCE.md)

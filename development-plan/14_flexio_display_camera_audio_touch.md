@@ -1,7 +1,7 @@
 # FlexIO、显示、摄像头、音频与触摸
 
 LCD-PAR-S035 的完整专项分析、选型方法和适配流程见
-[屏幕选型与适配](屏幕选型与适配/README.md)。
+[display-integration](display-integration/README.md)。
 
 ## 1. FlexIO
 

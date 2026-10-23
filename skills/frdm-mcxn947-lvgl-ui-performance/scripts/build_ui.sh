@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+BUILD_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$BUILD_SCRIPT_DIR/../../.." && pwd)"
 
 MCXN_ROOT="${MCXN_ROOT:-$REPO_ROOT}"
 MCXN_SDK="${MCXN_SDK:-$MCXN_ROOT/mcuxpresso-sdk}"
@@ -14,7 +14,7 @@ UI_CONFIG="${UI_CONFIG:-debug}"
 UI_SOURCE="${UI_SOURCE:-$MCXN_SDK/mcuxsdk/examples/$UI_APP}"
 UI_MAIN="${UI_MAIN:-$UI_SOURCE/$(basename "$UI_APP").c}"
 
-PROJECT_ENV="$MCXN_ROOT/开发计划/scripts/env.sh"
+PROJECT_ENV="$MCXN_ROOT/development-plan/scripts/env.sh"
 if [[ ! -f "$PROJECT_ENV" ]]; then
     printf 'Project environment not found: %s\n' "$PROJECT_ENV" >&2
     exit 1
@@ -59,4 +59,4 @@ UI_APP="$UI_APP" \
 UI_SOURCE="$UI_SOURCE" \
 UI_MAIN="$UI_MAIN" \
 UI_ELF="$UI_ELF" \
-"$SCRIPT_DIR/audit_ui_config.sh"
+"$BUILD_SCRIPT_DIR/audit_ui_config.sh"

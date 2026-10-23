@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 MCXN_ROOT="${MCXN_ROOT:-$REPO_ROOT}"
 MCXN_SDK="${MCXN_SDK:-$MCXN_ROOT/mcuxpresso-sdk}"
 
-PROJECT_ENV="$MCXN_ROOT/开发计划/scripts/env.sh"
+PROJECT_ENV="$MCXN_ROOT/development-plan/scripts/env.sh"
 if [[ -f "$PROJECT_ENV" ]]; then
     # Load the pinned west, GCC and LinkServer toolchain for standalone audits.
     # shellcheck disable=SC1090

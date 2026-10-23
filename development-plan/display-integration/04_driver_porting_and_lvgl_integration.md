@@ -20,7 +20,7 @@ FRDM-MCXN947 当前实际选中的不是 `flexcomm_spi_lcd_par_s035`，而是 `m
 本机已成功执行：
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \

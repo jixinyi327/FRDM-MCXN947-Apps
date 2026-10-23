@@ -32,7 +32,7 @@ examples/_boards/frdmmcxn947/cm33_core0/            核心配置
 ## 2. 当前板级构建命令
 
 ```bash
-source /home/jxy/NXP/MCXN947/开发计划/scripts/env.sh
+source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \

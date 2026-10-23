@@ -137,17 +137,32 @@ transport_exec() {
     fi
 }
 
+remote_git_ls() {
+    local attempt
+
+    for attempt in 1 2 3; do
+        if transport_exec git ls-remote "$@"; then
+            return 0
+        fi
+        [[ "$attempt" == 3 ]] || sleep 2
+    done
+    return 1
+}
+
 ensure_transport_access() {
     local answer
 
     choose_transport
     if [[ "$TRANSPORT" != "ssh" ]]; then
-        pass 'using HTTPS for GitHub access'
-        return 0
+        if remote_git_ls --heads "$MANIFEST_HTTPS_URL" HEAD >/dev/null 2>&1; then
+            pass 'GitHub HTTPS access works'
+            return 0
+        fi
+        die 'GitHub HTTPS access failed; check DNS, proxy or network settings'
     fi
 
     printf 'Checking GitHub SSH access...\n'
-    if transport_exec git ls-remote --heads "$MANIFEST_HTTPS_URL" HEAD >/dev/null 2>&1; then
+    if remote_git_ls --heads "$MANIFEST_HTTPS_URL" HEAD >/dev/null 2>&1; then
         pass 'GitHub SSH access works'
         return 0
     fi
@@ -463,9 +478,9 @@ setup_environment() {
 latest_release_tag() {
     local tags
 
-    tags="$(transport_exec git ls-remote --tags --refs \
-        "$MANIFEST_HTTPS_URL" 'v*' 2>/dev/null)" ||
-        return 1
+    tags="$(remote_git_ls --tags --refs \
+        "$MANIFEST_HTTPS_URL" 'v*' 2>/dev/null)" || return 1
+    [[ -n "$tags" ]] || return 1
 
     printf '%s\n' "$tags" |
         sed -n 's#.*refs/tags/\(v[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9]\)$#\1#p' |
@@ -475,10 +490,23 @@ latest_release_tag() {
 
 remote_tag_hash() {
     local tag="$1"
+    local exact_hash
+    local peeled_hash
 
-    transport_exec git ls-remote --tags --refs \
+    # Annotated tags have a tag-object hash and a peeled commit hash. Compare
+    # the peeled commits so a valid release is not reported as rewritten.
+    peeled_hash="$(remote_git_ls --tags \
+        "$MANIFEST_HTTPS_URL" "refs/tags/$tag^{}" 2>/dev/null |
+        awk 'NR==1 {print $1}')" || return 1
+    if [[ -n "$peeled_hash" ]]; then
+        printf '%s\n' "$peeled_hash"
+        return 0
+    fi
+
+    exact_hash="$(remote_git_ls --tags --refs \
         "$MANIFEST_HTTPS_URL" "refs/tags/$tag" 2>/dev/null |
-        awk 'NR==1 {print $1}'
+        awk 'NR==1 {print $1}')" || return 1
+    printf '%s\n' "$exact_hash"
 }
 
 check_updates() {
@@ -505,7 +533,8 @@ check_updates() {
     if [[ "$current_tag" == v* ]]; then
         current_hash="$(git -C "$MCXN_SDK/manifests" rev-parse "$current_tag^{commit}")"
     fi
-    latest_hash="$(remote_tag_hash "$latest_tag")"
+    latest_hash="$(remote_tag_hash "$latest_tag")" ||
+        die "unable to resolve remote SDK release $latest_tag"
 
     printf '\n== SDK update check ==\n'
     printf 'Current manifest: %s %s\n' "$current_tag" "$current_hash"
@@ -518,10 +547,13 @@ check_updates() {
           "$current_tag" != "$latest_tag" ]]; then
         printf 'A newer SDK release is available.\n'
         UPDATE_AVAILABLE=1
-    elif [[ -n "$current_hash" && -n "$latest_hash" &&
+    elif [[ "$current_tag" == "$latest_tag" && -n "$current_hash" && -n "$latest_hash" &&
             "$current_hash" != "$latest_hash" ]]; then
-        printf 'The same release tag points to a different remote commit.\n'
-        UPDATE_AVAILABLE=1
+        warn 'The same release tag resolves to a different commit; automatic update is blocked.'
+        warn 'Review the upstream tag before changing the SDK workspace.'
+    elif [[ "$current_tag" == "$latest_tag" &&
+            -n "$current_hash" && "$current_hash" == "$latest_hash" ]]; then
+        printf 'Current workspace is on the latest stable SDK release.\n'
     else
         printf 'No newer stable SDK release tag was found.\n'
     fi
