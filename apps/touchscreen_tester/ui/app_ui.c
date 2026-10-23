@@ -30,14 +30,14 @@ typedef struct {
     uint8_t target_index;
 } page_anim_context_t;
 
-static const char *s_page_titles[PAGE_COUNT] = {
-    "Free Draw",
-    "Block Check",
-    "Accuracy",
-    "Settings",
+static const ui_text_id_t s_page_title_ids[PAGE_COUNT] = {
+    UI_TEXT_MENU_FREE_DRAW,
+    UI_TEXT_MENU_BLOCK_CHECK,
+    UI_TEXT_MENU_ACCURACY,
+    UI_TEXT_MENU_SETTINGS,
 };
 
-static const char *s_page_badges[PAGE_COUNT] = {
+static const char *const s_page_badges[PAGE_COUNT] = {
     "D",
     "B",
     "A",
@@ -46,6 +46,7 @@ static const char *s_page_badges[PAGE_COUNT] = {
 
 static lv_obj_t *s_pages[PAGE_COUNT];
 static lv_obj_t *s_menu_items[MENU_ITEM_COUNT];
+static lv_obj_t *s_menu_text_labels[MENU_ITEM_COUNT];
 static lv_obj_t *s_page_layer;
 static lv_obj_t *s_menu_overlay;
 static lv_obj_t *s_menu_panel;
@@ -56,7 +57,12 @@ static lv_obj_t *s_info_primary_label;
 static lv_obj_t *s_info_detail_label;
 static lv_obj_t *s_confirm_overlay;
 static lv_obj_t *s_confirm_panel;
+static lv_obj_t *s_confirm_title_label;
 static lv_obj_t *s_confirm_detail_label;
+static lv_obj_t *s_confirm_cancel_button;
+static lv_obj_t *s_confirm_action_button;
+static lv_obj_t *s_reset_label;
+static lv_obj_t *s_tab_label;
 static lv_anim_t s_menu_animation;
 static lv_anim_t s_page_animation;
 static lv_anim_t s_confirm_animation;
@@ -69,11 +75,11 @@ static int8_t s_pending_page = -1;
 static uint8_t s_current_page;
 static bool s_page_transition_active;
 
-static const char *s_reset_prompts[PAGE_COUNT] = {
-    "Clear the current drawing canvas?",
-    "Clear the 12 x 7 coverage grid?",
-    "Clear accuracy statistics and recenter the target?",
-    "Clear drawing, grid and accuracy test data?",
+static const ui_text_id_t s_reset_prompt_ids[PAGE_COUNT] = {
+    UI_TEXT_CONFIRM_FREE_DRAW,
+    UI_TEXT_CONFIRM_BLOCK_CHECK,
+    UI_TEXT_CONFIRM_ACCURACY,
+    UI_TEXT_CONFIRM_SETTINGS,
 };
 
 static void menu_refresh_selection(void)
@@ -90,6 +96,30 @@ static void menu_refresh_selection(void)
         {
             lv_obj_remove_state(s_menu_items[i], LV_STATE_CHECKED);
         }
+    }
+}
+
+static void language_changed_cb(ui_language_t language)
+{
+    uint32_t i;
+
+    ui_theme_set_language(language);
+    for (i = 0; i < MENU_ITEM_COUNT; i++)
+    {
+        lv_label_set_text(s_menu_text_labels[i],
+                          ui_tr(s_page_title_ids[i]));
+    }
+    lv_label_set_text(s_reset_label, ui_tr(UI_TEXT_BUTTON_RESET));
+    lv_label_set_text(s_tab_label, ui_tr(UI_TEXT_BUTTON_TAB));
+    lv_label_set_text(s_confirm_title_label, ui_tr(UI_TEXT_CONFIRM_TITLE));
+    lv_label_set_text(lv_obj_get_child(s_confirm_cancel_button, 0),
+                      ui_tr(UI_TEXT_BUTTON_CANCEL));
+    lv_label_set_text(lv_obj_get_child(s_confirm_action_button, 0),
+                      ui_tr(UI_TEXT_BUTTON_CONFIRM_RESET));
+    if (!lv_obj_has_flag(s_confirm_overlay, LV_OBJ_FLAG_HIDDEN))
+    {
+        lv_label_set_text(s_confirm_detail_label,
+                          ui_tr(s_reset_prompt_ids[s_current_page]));
     }
 }
 
@@ -323,8 +353,9 @@ static void perform_reset(void)
             screen_free_draw_clear();
             screen_block_check_reset();
             screen_accuracy_reset();
-            ui_info_set(UI_PAGE_SETTINGS, "All test data reset");
-            ui_info_set_detail(UI_PAGE_SETTINGS, "Drawing, grid and stats cleared");
+            ui_info_set(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_ALL_RESET));
+            ui_info_set_detail(UI_PAGE_SETTINGS,
+                               ui_tr(UI_TEXT_SETTINGS_ALL_RESET_DETAIL));
             break;
         default:
             break;
@@ -370,7 +401,8 @@ static void open_reset_confirmation(void)
 {
     s_pending_page = -1;
     close_menu();
-    lv_label_set_text(s_confirm_detail_label, s_reset_prompts[s_current_page]);
+    lv_label_set_text(s_confirm_detail_label,
+                      ui_tr(s_reset_prompt_ids[s_current_page]));
     lv_obj_remove_flag(s_confirm_overlay, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_foreground(s_confirm_overlay);
     animate_confirm(1000);
@@ -452,8 +484,9 @@ static lv_obj_t *create_menu_item(lv_obj_t *parent, uint8_t index)
     badge_label = ui_create_label(badge, s_page_badges[index], UI_LABEL_ACCENT);
     lv_obj_center(badge_label);
 
-    text_label = ui_create_label(button, s_page_titles[index], UI_LABEL_BODY);
+    text_label = ui_create_label(button, ui_tr(s_page_title_ids[index]), UI_LABEL_BODY);
     lv_obj_set_pos(text_label, 46, 11);
+    s_menu_text_labels[index] = text_label;
 
     return button;
 }
@@ -500,9 +533,10 @@ static void create_menu(lv_obj_t *root)
     ui_style_apply_transparent(s_control_bar);
     lv_obj_remove_flag(s_control_bar, LV_OBJ_FLAG_SCROLLABLE);
 
-    s_reset_button = create_footer_button(s_control_bar, "Reset");
+    s_reset_button = create_footer_button(s_control_bar, ui_tr(UI_TEXT_BUTTON_RESET));
     lv_obj_set_pos(s_reset_button, 0, 0);
     ui_style_apply_button_danger(s_reset_button);
+    s_reset_label = lv_obj_get_child(s_reset_button, 0);
     lv_obj_add_event_cb(s_reset_button, reset_event_cb, LV_EVENT_CLICKED, NULL);
 
     info_bar = lv_obj_create(s_control_bar);
@@ -524,11 +558,12 @@ static void create_menu(lv_obj_t *root)
     lv_label_set_long_mode(s_info_detail_label, LV_LABEL_LONG_DOT);
     ui_info_bind_labels(s_info_primary_label, s_info_detail_label);
 
-    s_menu_button = create_footer_button(s_control_bar, "TAB");
+    s_menu_button = create_footer_button(s_control_bar, ui_tr(UI_TEXT_BUTTON_TAB));
     lv_obj_set_pos(s_menu_button,
                    UI_SCREEN_WIDTH - (UI_FOOTER_MARGIN * 2) - UI_FOOTER_BUTTON_WIDTH,
                    0);
     ui_style_apply_button_primary(s_menu_button);
+    s_tab_label = lv_obj_get_child(s_menu_button, 0);
     lv_obj_add_event_cb(s_menu_button, menu_button_event_cb, LV_EVENT_CLICKED, NULL);
 
     s_confirm_overlay = lv_obj_create(root);
@@ -547,23 +582,29 @@ static void create_menu(lv_obj_t *root)
     ui_style_apply_card(s_confirm_panel);
     lv_obj_set_style_opa(s_confirm_panel, LV_OPA_TRANSP, 0);
 
-    confirm_title = ui_create_label(s_confirm_panel, "Reset current page?", UI_LABEL_BODY);
+    confirm_title = ui_create_label(s_confirm_panel,
+                                    ui_tr(UI_TEXT_CONFIRM_TITLE), UI_LABEL_BODY);
     lv_obj_set_pos(confirm_title, 0, 0);
+    s_confirm_title_label = confirm_title;
 
     s_confirm_detail_label = ui_create_label(s_confirm_panel, "", UI_LABEL_MUTED);
     lv_obj_set_width(s_confirm_detail_label, 296);
     lv_obj_set_pos(s_confirm_detail_label, 0, 25);
     lv_label_set_long_mode(s_confirm_detail_label, LV_LABEL_LONG_WRAP);
 
-    cancel_button = ui_create_button_base(s_confirm_panel, "Cancel", 96, 40);
+    cancel_button = ui_create_button_base(s_confirm_panel,
+                                          ui_tr(UI_TEXT_BUTTON_CANCEL), 96, 40);
     ui_style_apply_option_button(cancel_button);
     lv_obj_set_pos(cancel_button, 0, 76);
     lv_obj_add_event_cb(cancel_button, cancel_reset_event_cb, LV_EVENT_CLICKED, NULL);
+    s_confirm_cancel_button = cancel_button;
 
-    confirm_button = ui_create_button_base(s_confirm_panel, "Reset", 112, 40);
+    confirm_button = ui_create_button_base(s_confirm_panel,
+                                           ui_tr(UI_TEXT_BUTTON_CONFIRM_RESET), 112, 40);
     ui_style_apply_button_danger(confirm_button);
     lv_obj_set_pos(confirm_button, 184, 76);
     lv_obj_add_event_cb(confirm_button, confirm_reset_event_cb, LV_EVENT_CLICKED, NULL);
+    s_confirm_action_button = confirm_button;
 }
 
 void app_ui_init(void)
@@ -571,7 +612,9 @@ void app_ui_init(void)
     lv_obj_t *root = lv_screen_active();
     uint32_t i;
 
+    ui_i18n_init();
     ui_theme_init();
+    (void)ui_i18n_subscribe(language_changed_cb);
     ui_style_apply_screen(root);
 
     s_page_layer = lv_obj_create(root);

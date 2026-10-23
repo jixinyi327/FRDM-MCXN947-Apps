@@ -20,6 +20,8 @@ mcux_add_source(
         ./main.c
         ./ui/app_ui.c
         ./ui/app_ui.h
+        ./ui/fonts/ui_font_zh_16.c
+        ./ui/fonts/ui_font_zh_24.c
         ./ui/screen_accuracy.c
         ./ui/screen_accuracy.h
         ./ui/screen_block_check.c
@@ -30,6 +32,8 @@ mcux_add_source(
         ./ui/screen_settings.h
         ./ui/ui_common.c
         ./ui/ui_common.h
+        ./ui/ui_i18n.c
+        ./ui/ui_i18n.h
         ./ui/ui_theme.c
         ./ui/ui_theme.h
 )

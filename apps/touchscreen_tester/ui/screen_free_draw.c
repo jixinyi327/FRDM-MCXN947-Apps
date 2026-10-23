@@ -16,11 +16,14 @@ static uint8_t s_canvas_pixels[DRAW_CANVAS_WIDTH * DRAW_CANVAS_HEIGHT];
 static lv_obj_t *s_canvas;
 static lv_draw_buf_t *s_canvas_draw_buf;
 static lv_obj_t *s_hint_label;
+static ui_header_t s_header;
 static uint8_t s_line_width = 4U;
 static bool s_show_coordinates;
 static bool s_has_last_point;
+static bool s_has_info_point;
 static int32_t s_last_x;
 static int32_t s_last_y;
+static lv_point_t s_info_point;
 
 static void draw_pixel(int32_t x, int32_t y)
 {
@@ -105,17 +108,60 @@ static void update_coordinate_label(const lv_point_t *point)
 
     if (!s_show_coordinates || (point == NULL))
     {
-        ui_info_set(UI_PAGE_FREE_DRAW, "Drawing");
-        lv_snprintf(text, sizeof(text), "Coordinates hidden | width %u px",
+        ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_DRAWING));
+        lv_snprintf(text, sizeof(text),
+                    ui_tr(UI_TEXT_FREE_DRAW_COORDS_HIDDEN_FORMAT),
                     (unsigned)s_line_width);
         ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
         return;
     }
 
-    ui_info_set(UI_PAGE_FREE_DRAW, "Touch input");
-    lv_snprintf(text, sizeof(text), "x:%3d  y:%3d | width %u px",
+    s_info_point = *point;
+    s_has_info_point = true;
+    ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_TOUCH_INPUT));
+    lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_FREE_DRAW_COORDS_FORMAT),
                 (int)point->x, (int)point->y, (unsigned)s_line_width);
     ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
+}
+
+static void update_canvas_hint(void)
+{
+    char text[96];
+
+    lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_FREE_DRAW_CANVAS_FORMAT),
+                (unsigned)DRAW_CANVAS_WIDTH, (unsigned)DRAW_CANVAS_HEIGHT,
+                (unsigned)s_line_width);
+    lv_label_set_text(s_hint_label, text);
+}
+
+static void language_changed_cb(ui_language_t language)
+{
+    char text[96];
+
+    LV_UNUSED(language);
+    lv_label_set_text(s_header.title, ui_tr(UI_TEXT_PAGE_FREE_DRAW_TITLE));
+    lv_label_set_text(s_header.subtitle, ui_tr(UI_TEXT_PAGE_FREE_DRAW_SUBTITLE));
+    update_canvas_hint();
+
+    if (s_has_info_point && s_show_coordinates)
+    {
+        ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_TOUCH_INPUT));
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_FREE_DRAW_COORDS_FORMAT),
+                    (int)s_info_point.x, (int)s_info_point.y,
+                    (unsigned)s_line_width);
+        ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
+    }
+    else
+    {
+        ui_info_set(UI_PAGE_FREE_DRAW,
+                    s_show_coordinates ?
+                    ui_tr(UI_TEXT_FREE_DRAW_COORDS_SHOWN) :
+                    ui_tr(UI_TEXT_FREE_DRAW_DRAWING));
+        lv_snprintf(text, sizeof(text),
+                    ui_tr(UI_TEXT_FREE_DRAW_WIDTH_SUMMARY_FORMAT),
+                    (unsigned)s_line_width);
+        ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
+    }
 }
 
 static void canvas_event_cb(lv_event_t *event)
@@ -172,7 +218,8 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
     lv_obj_t *page = ui_create_page(parent);
     lv_obj_t *canvas_frame;
 
-    ui_create_header(page, "Free Draw", "Draw continuously to inspect touch continuity");
+    s_header = ui_create_header(page, ui_tr(UI_TEXT_PAGE_FREE_DRAW_TITLE),
+                                ui_tr(UI_TEXT_PAGE_FREE_DRAW_SUBTITLE));
 
     canvas_frame = lv_obj_create(page);
     lv_obj_set_size(canvas_frame, DRAW_CANVAS_WIDTH + 2, DRAW_CANVAS_HEIGHT + 2);
@@ -198,12 +245,13 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
 
     s_canvas_draw_buf = lv_canvas_get_draw_buf(s_canvas);
 
-    s_hint_label = ui_create_label(page, "Canvas 404 x 164  |  line width 4 px",
-                                   UI_LABEL_MUTED);
+    s_hint_label = ui_create_label(page, "", UI_LABEL_MUTED);
     lv_obj_set_pos(s_hint_label, UI_CONTENT_LEFT, 224);
+    update_canvas_hint();
 
-    ui_info_set(UI_PAGE_FREE_DRAW, "Free draw ready");
-    ui_info_set_detail(UI_PAGE_FREE_DRAW, "Draw continuously to inspect touch");
+    ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_READY));
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_READY_DETAIL));
+    (void)ui_i18n_subscribe(language_changed_cb);
 
     return page;
 }
@@ -217,9 +265,10 @@ void screen_free_draw_clear(void)
 
     memset(s_canvas_pixels, 0xFF, sizeof(s_canvas_pixels));
     s_has_last_point = false;
+    s_has_info_point = false;
     lv_obj_invalidate(s_canvas);
-    ui_info_set(UI_PAGE_FREE_DRAW, "Canvas cleared");
-    ui_info_set_detail(UI_PAGE_FREE_DRAW, "Draw to start a new test");
+    ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_CLEARED));
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_CLEARED_DETAIL));
 }
 
 void screen_free_draw_set_line_width(uint8_t width)
@@ -232,11 +281,10 @@ void screen_free_draw_set_line_width(uint8_t width)
         return;
     }
 
-    lv_snprintf(text, sizeof(text), "Canvas 404 x 164  |  line width %u px",
+    update_canvas_hint();
+    ui_info_set(UI_PAGE_FREE_DRAW, ui_tr(UI_TEXT_FREE_DRAW_WIDTH_UPDATED));
+    lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_FREE_DRAW_WIDTH_DETAIL_FORMAT),
                 (unsigned)s_line_width);
-    lv_label_set_text(s_hint_label, text);
-    ui_info_set(UI_PAGE_FREE_DRAW, "Line width updated");
-    lv_snprintf(text, sizeof(text), "%u px | continuous stroke", (unsigned)s_line_width);
     ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
 }
 
@@ -245,7 +293,11 @@ void screen_free_draw_set_show_coordinates(bool show)
     char text[96];
 
     s_show_coordinates = show;
-    ui_info_set(UI_PAGE_FREE_DRAW, show ? "Touch coordinates shown" : "Touch coordinates hidden");
-    lv_snprintf(text, sizeof(text), "Draw width %u px", (unsigned)s_line_width);
+    ui_info_set(UI_PAGE_FREE_DRAW,
+                show ? ui_tr(UI_TEXT_FREE_DRAW_COORDS_SHOWN) :
+                       ui_tr(UI_TEXT_FREE_DRAW_COORDS_HIDDEN));
+    lv_snprintf(text, sizeof(text),
+                ui_tr(UI_TEXT_FREE_DRAW_WIDTH_SUMMARY_FORMAT),
+                (unsigned)s_line_width);
     ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
 }

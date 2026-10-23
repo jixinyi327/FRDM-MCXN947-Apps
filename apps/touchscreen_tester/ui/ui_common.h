@@ -32,8 +32,13 @@ typedef enum {
     UI_PAGE_COUNT
 } ui_page_t;
 
+typedef struct {
+    lv_obj_t *title;
+    lv_obj_t *subtitle;
+} ui_header_t;
+
 lv_obj_t *ui_create_page(lv_obj_t *parent);
-void ui_create_header(lv_obj_t *page, const char *title, const char *subtitle);
+ui_header_t ui_create_header(lv_obj_t *page, const char *title, const char *subtitle);
 lv_obj_t *ui_create_label(lv_obj_t *parent, const char *text, ui_label_role_t role);
 lv_obj_t *ui_create_button_base(lv_obj_t *parent, const char *text, int32_t width, int32_t height);
 lv_obj_t *ui_create_button(lv_obj_t *parent, const char *text, int32_t width, int32_t height);

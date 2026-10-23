@@ -6,6 +6,10 @@
 #define UI_THEME_H
 
 #include "lvgl.h"
+#include "ui_i18n.h"
+
+LV_FONT_DECLARE(ui_font_zh_16);
+LV_FONT_DECLARE(ui_font_zh_24);
 
 #define UI_COLOR_BG lv_color_hex(0xF2F5F7)
 #define UI_COLOR_SURFACE lv_color_hex(0xFFFFFF)
@@ -34,6 +38,7 @@ typedef enum {
 } ui_label_role_t;
 
 void ui_theme_init(void);
+void ui_theme_set_language(ui_language_t language);
 void ui_style_apply_screen(lv_obj_t *obj);
 void ui_style_apply_transparent(lv_obj_t *obj);
 void ui_style_apply_card(lv_obj_t *obj);

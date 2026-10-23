@@ -266,6 +266,26 @@ void ui_theme_init(void)
     lv_style_set_outline_pad(&style_button_focused, 2);
 
     s_theme_initialized = true;
+    ui_theme_set_language(ui_i18n_get_language());
+}
+
+void ui_theme_set_language(ui_language_t language)
+{
+    const lv_font_t *title_font =
+        (language == UI_LANGUAGE_ZH) ? &ui_font_zh_24 : UI_FONT_TITLE;
+    const lv_font_t *body_font =
+        (language == UI_LANGUAGE_ZH) ? &ui_font_zh_16 : UI_FONT_BODY;
+
+    lv_style_set_text_font(&style_label_title, title_font);
+    lv_style_set_text_font(&style_label_body, body_font);
+    lv_style_set_text_font(&style_label_muted, body_font);
+    lv_style_set_text_font(&style_label_accent, body_font);
+    lv_style_set_text_font(&style_label_button, body_font);
+    lv_style_set_text_font(&style_button_primary, body_font);
+    lv_style_set_text_font(&style_button_danger, body_font);
+    lv_style_set_text_font(&style_option_button, body_font);
+    lv_style_set_text_font(&style_menu_item, body_font);
+    lv_obj_report_style_change(NULL);
 }
 
 void ui_style_apply_screen(lv_obj_t *obj)

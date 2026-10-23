@@ -30,9 +30,9 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           386,648 B
-m_data:           279,448 B / 312 KiB
-static RAM:       279,456 B
+m_text:           433,096 B
+m_data:           279,528 B / 312 KiB
+static RAM:       279,536 B
 audit failures:         0
 ```
 
@@ -104,6 +104,19 @@ Touchscreen tester started: 480x320, 16 ms UI cadence
 - build and board/display audits pass; physical modal, state and touch feedback
   remain pending user confirmation.
 
+## Chinese/English Localization
+
+- default startup language is Chinese;
+- all visible UI copy is resolved through `ui_i18n.c` translation IDs;
+- a settings button toggles between Chinese and English;
+- the theme switches between Montserrat and generated Source Han Sans subsets;
+- the 16 px and 24 px subsets each cover all 121 Chinese characters currently
+  used by the translation table;
+- `scripts/generate_fonts.sh` regenerates both subsets when translations change;
+- the added fonts increase Flash by about 45 KiB without adding display buffers;
+- build, audits, flash and startup pass; physical language switching and glyph
+  readability remain pending user confirmation.
+
 ## Physical Visual Evidence
 
 Pending user observation:
@@ -120,6 +133,7 @@ Pending user observation:
 - bad-block grid coverage;
 - accuracy target movement and statistics;
 - accuracy miss shake, red flash and automatic color recovery;
+- default Chinese startup and bidirectional language switching;
 - recovery immediately after motion stops.
 
 ## Decision

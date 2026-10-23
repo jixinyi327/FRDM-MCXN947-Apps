@@ -26,6 +26,7 @@ typedef struct {
 static lv_obj_t *s_area;
 static lv_obj_t *s_target;
 static lv_obj_t *s_target_marks[3];
+static ui_header_t s_header;
 static target_anim_context_t s_target_anim_context;
 static lv_anim_t s_target_anim;
 static lv_anim_t s_error_anim;
@@ -35,8 +36,11 @@ static uint32_t s_attempt_count;
 static uint32_t s_total_error_tenths;
 static uint32_t s_best_error_tenths;
 static uint32_t s_random_state = 0xC0FFEEU;
+static uint32_t s_last_error_tenths;
 static bool s_target_moving;
 static bool s_error_feedback_active;
+static bool s_has_attempt;
+static bool s_last_hit;
 
 static uint32_t next_random(void)
 {
@@ -160,39 +164,66 @@ static void show_error_feedback(void)
     lv_anim_start(&s_error_anim);
 }
 
+static void update_localized_info(void);
+
 static void update_stats(uint32_t error_tenths, bool hit)
 {
-    char text[96];
-    uint32_t average_tenths;
-
     s_attempt_count++;
+    s_has_attempt = true;
+    s_last_error_tenths = error_tenths;
+    s_last_hit = hit;
     s_total_error_tenths += error_tenths;
     if (error_tenths < s_best_error_tenths)
     {
         s_best_error_tenths = error_tenths;
     }
 
-    average_tenths = s_total_error_tenths / s_attempt_count;
-    if (hit)
+    update_localized_info();
+}
+
+static void update_localized_info(void)
+{
+    char text[96];
+    uint32_t average_tenths;
+
+    if (!s_has_attempt)
     {
-        lv_snprintf(text, sizeof(text),
-                    "HIT %u.%u px",
-                    (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U));
+        ui_info_set(UI_PAGE_ACCURACY, ui_tr(UI_TEXT_ACC_RESET));
+        ui_info_set_detail(UI_PAGE_ACCURACY, ui_tr(UI_TEXT_ACC_START));
+        return;
+    }
+
+    average_tenths = s_total_error_tenths / s_attempt_count;
+    if (s_last_hit)
+    {
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_ACC_HIT_FORMAT),
+                    (unsigned)(s_last_error_tenths / 10U),
+                    (unsigned)(s_last_error_tenths % 10U));
         ui_info_set(UI_PAGE_ACCURACY, text);
-        lv_snprintf(text, sizeof(text),
-                    "Avg %u.%u | Best %u.%u px | N %u",
-                    (unsigned)(average_tenths / 10U), (unsigned)(average_tenths % 10U),
-                    (unsigned)(s_best_error_tenths / 10U), (unsigned)(s_best_error_tenths % 10U),
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_ACC_STATS_FORMAT),
+                    (unsigned)(average_tenths / 10U),
+                    (unsigned)(average_tenths % 10U),
+                    (unsigned)(s_best_error_tenths / 10U),
+                    (unsigned)(s_best_error_tenths % 10U),
                     (unsigned)s_attempt_count);
         ui_info_set_detail(UI_PAGE_ACCURACY, text);
     }
     else
     {
-        lv_snprintf(text, sizeof(text), "MISS %u.%u px",
-                    (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U));
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_ACC_MISS_FORMAT),
+                    (unsigned)(s_last_error_tenths / 10U),
+                    (unsigned)(s_last_error_tenths % 10U));
         ui_info_set(UI_PAGE_ACCURACY, text);
-        ui_info_set_detail(UI_PAGE_ACCURACY, "Tap inside target and try again");
+        ui_info_set_detail(UI_PAGE_ACCURACY, ui_tr(UI_TEXT_ACC_RETRY));
     }
+}
+
+static void language_changed_cb(ui_language_t language)
+{
+    LV_UNUSED(language);
+    lv_label_set_text(s_header.title, ui_tr(UI_TEXT_PAGE_ACCURACY_TITLE));
+    lv_label_set_text(s_header.subtitle, ui_tr(UI_TEXT_PAGE_ACCURACY_SUBTITLE));
+    update_localized_info();
 }
 
 static void area_event_cb(lv_event_t *event)
@@ -249,7 +280,8 @@ lv_obj_t *screen_accuracy_create(lv_obj_t *parent)
     lv_obj_t *vertical_mark;
     lv_obj_t *center_mark;
 
-    ui_create_header(page, "Touch Accuracy", "Tap the center of each moving target");
+    s_header = ui_create_header(page, ui_tr(UI_TEXT_PAGE_ACCURACY_TITLE),
+                                ui_tr(UI_TEXT_PAGE_ACCURACY_SUBTITLE));
 
     s_area = lv_obj_create(page);
     lv_obj_set_size(s_area, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
@@ -275,6 +307,7 @@ lv_obj_t *screen_accuracy_create(lv_obj_t *parent)
     s_target_y = (UI_CONTENT_HEIGHT - TARGET_SIZE) / 2;
     lv_obj_set_pos(s_target, s_target_x, s_target_y);
 
+    (void)ui_i18n_subscribe(language_changed_cb);
     screen_accuracy_reset();
     return page;
 }
@@ -295,9 +328,12 @@ void screen_accuracy_reset(void)
     s_attempt_count = 0U;
     s_total_error_tenths = 0U;
     s_best_error_tenths = UINT32_MAX;
+    s_last_error_tenths = 0U;
+    s_has_attempt = false;
+    s_last_hit = false;
     s_target_x = (UI_CONTENT_WIDTH - TARGET_SIZE) / 2;
     s_target_y = (UI_CONTENT_HEIGHT - TARGET_SIZE) / 2;
     lv_obj_set_pos(s_target, s_target_x, s_target_y);
-    ui_info_set(UI_PAGE_ACCURACY, "Accuracy reset");
-    ui_info_set_detail(UI_PAGE_ACCURACY, "Tap the moving target to begin");
+    ui_info_set(UI_PAGE_ACCURACY, ui_tr(UI_TEXT_ACC_RESET));
+    ui_info_set_detail(UI_PAGE_ACCURACY, ui_tr(UI_TEXT_ACC_START));
 }

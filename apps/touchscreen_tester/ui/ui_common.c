@@ -32,13 +32,19 @@ lv_obj_t *ui_create_label(lv_obj_t *parent, const char *text, ui_label_role_t ro
     return label;
 }
 
-void ui_create_header(lv_obj_t *page, const char *title, const char *subtitle)
+ui_header_t ui_create_header(lv_obj_t *page, const char *title, const char *subtitle)
 {
     lv_obj_t *title_label = ui_create_label(page, title, UI_LABEL_TITLE);
+    ui_header_t header;
+
     lv_obj_set_pos(title_label, UI_CONTENT_LEFT, 2);
 
     lv_obj_t *subtitle_label = ui_create_label(page, subtitle, UI_LABEL_MUTED);
     lv_obj_set_pos(subtitle_label, UI_CONTENT_LEFT, 33);
+
+    header.title = title_label;
+    header.subtitle = subtitle_label;
+    return header;
 }
 
 lv_obj_t *ui_create_button_base(lv_obj_t *parent, const char *text, int32_t width, int32_t height)

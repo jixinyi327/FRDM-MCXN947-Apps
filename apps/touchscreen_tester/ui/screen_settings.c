@@ -14,6 +14,11 @@
 static lv_obj_t *s_width_buttons[WIDTH_BUTTON_COUNT];
 static lv_obj_t *s_coordinate_switch;
 static lv_obj_t *s_coordinate_knob;
+static lv_obj_t *s_width_label;
+static lv_obj_t *s_coordinate_label;
+static lv_obj_t *s_language_label;
+static lv_obj_t *s_language_button;
+static ui_header_t s_header;
 static bool s_show_coordinates;
 
 static void knob_anim_cb(void *var, int32_t x)
@@ -41,8 +46,9 @@ static void width_event_cb(lv_event_t *event)
     {
         char text[48];
 
-        lv_snprintf(text, sizeof(text), "Draw width: %u px", (unsigned)width);
-        ui_info_set(UI_PAGE_SETTINGS, "Line width updated");
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_SETTINGS_WIDTH_DETAIL_FORMAT),
+                    (unsigned)width);
+        ui_info_set(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_WIDTH_UPDATED));
         ui_info_set_detail(UI_PAGE_SETTINGS, text);
     }
 }
@@ -85,8 +91,10 @@ static void coordinate_switch_event_cb(lv_event_t *event)
     screen_free_draw_set_show_coordinates(s_show_coordinates);
     update_coordinate_switch(true);
     ui_info_set(UI_PAGE_SETTINGS,
-                s_show_coordinates ? "Touch coordinates shown" : "Touch coordinates hidden");
-    ui_info_set_detail(UI_PAGE_SETTINGS, "Applied to the free draw page");
+                s_show_coordinates ?
+                ui_tr(UI_TEXT_SETTINGS_COORDS_SHOWN) :
+                ui_tr(UI_TEXT_SETTINGS_COORDS_HIDDEN));
+    ui_info_set_detail(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_COORDS_DETAIL));
 }
 
 static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
@@ -103,10 +111,12 @@ static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
 static void create_width_buttons(lv_obj_t *card)
 {
     static const char *labels[WIDTH_BUTTON_COUNT] = {"2", "4", "6"};
-    lv_obj_t *label = ui_create_label(card, "Draw line width", UI_LABEL_BODY);
+    lv_obj_t *label = ui_create_label(card, ui_tr(UI_TEXT_SETTINGS_LINE_WIDTH_LABEL),
+                                      UI_LABEL_BODY);
     uint32_t i;
 
     lv_obj_set_pos(label, 0, 7);
+    s_width_label = label;
 
     for (i = 0; i < WIDTH_BUTTON_COUNT; i++)
     {
@@ -123,9 +133,11 @@ static void create_width_buttons(lv_obj_t *card)
 
 static void create_coordinate_switch(lv_obj_t *card)
 {
-    lv_obj_t *label = ui_create_label(card, "Show touch coordinates", UI_LABEL_BODY);
+    lv_obj_t *label = ui_create_label(card, ui_tr(UI_TEXT_SETTINGS_COORDINATES_LABEL),
+                                      UI_LABEL_BODY);
 
     lv_obj_set_pos(label, 0, 5);
+    s_coordinate_label = label;
 
     s_coordinate_switch = lv_obj_create(card);
     lv_obj_set_size(s_coordinate_switch, 56, 30);
@@ -147,17 +159,37 @@ static void create_coordinate_switch(lv_obj_t *card)
     update_coordinate_switch(false);
 }
 
-static void create_shortcuts_card(lv_obj_t *card)
+static void language_button_event_cb(lv_event_t *event)
 {
-    lv_obj_t *label = ui_create_label(card, "Footer controls", UI_LABEL_BODY);
-    lv_obj_t *description;
+    LV_UNUSED(event);
+    ui_i18n_toggle();
+}
 
-    lv_obj_set_pos(label, 0, 0);
+static void create_language_card(lv_obj_t *card)
+{
+    s_language_label = ui_create_label(card, ui_tr(UI_TEXT_SETTINGS_LANGUAGE_LABEL),
+                                       UI_LABEL_BODY);
+    lv_obj_set_pos(s_language_label, 0, 5);
 
-    description = ui_create_label(card,
-                                  "Reset targets this page | TAB opens the test list",
-                                  UI_LABEL_MUTED);
-    lv_obj_set_pos(description, 0, 24);
+    s_language_button = ui_create_button(card, ui_tr(UI_TEXT_SETTINGS_LANGUAGE_TOGGLE),
+                                         116, 40);
+    lv_obj_set_pos(s_language_button, 300, 0);
+    lv_obj_add_event_cb(s_language_button, language_button_event_cb,
+                        LV_EVENT_CLICKED, NULL);
+}
+
+static void language_changed_cb(ui_language_t language)
+{
+    LV_UNUSED(language);
+    lv_label_set_text(s_header.title, ui_tr(UI_TEXT_PAGE_SETTINGS_TITLE));
+    lv_label_set_text(s_header.subtitle, ui_tr(UI_TEXT_PAGE_SETTINGS_SUBTITLE));
+    lv_label_set_text(s_width_label, ui_tr(UI_TEXT_SETTINGS_LINE_WIDTH_LABEL));
+    lv_label_set_text(s_coordinate_label, ui_tr(UI_TEXT_SETTINGS_COORDINATES_LABEL));
+    lv_label_set_text(s_language_label, ui_tr(UI_TEXT_SETTINGS_LANGUAGE_LABEL));
+    lv_label_set_text(lv_obj_get_child(s_language_button, 0),
+                      ui_tr(UI_TEXT_SETTINGS_LANGUAGE_TOGGLE));
+    ui_info_set(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_READY));
+    ui_info_set_detail(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_READY_DETAIL));
 }
 
 lv_obj_t *screen_settings_create(lv_obj_t *parent)
@@ -165,20 +197,22 @@ lv_obj_t *screen_settings_create(lv_obj_t *parent)
     lv_obj_t *page = ui_create_page(parent);
     lv_obj_t *drawing_card;
     lv_obj_t *input_card;
-    lv_obj_t *shortcuts_card;
+    lv_obj_t *language_card;
 
-    ui_create_header(page, "Settings", "Adjust test presentation and reset test state");
+    s_header = ui_create_header(page, ui_tr(UI_TEXT_PAGE_SETTINGS_TITLE),
+                                ui_tr(UI_TEXT_PAGE_SETTINGS_SUBTITLE));
 
     drawing_card = create_card(page, 54, 56);
     input_card = create_card(page, 116, 56);
-    shortcuts_card = create_card(page, 178, 72);
+    language_card = create_card(page, 178, 64);
 
     create_width_buttons(drawing_card);
     create_coordinate_switch(input_card);
-    create_shortcuts_card(shortcuts_card);
+    create_language_card(language_card);
 
-    ui_info_set(UI_PAGE_SETTINGS, "Settings ready");
-    ui_info_set_detail(UI_PAGE_SETTINGS, "Changes apply immediately");
+    ui_info_set(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_READY));
+    ui_info_set_detail(UI_PAGE_SETTINGS, ui_tr(UI_TEXT_SETTINGS_READY_DETAIL));
+    (void)ui_i18n_subscribe(language_changed_cb);
 
     return page;
 }

@@ -15,6 +15,7 @@
 #define GRID_GAP 2
 
 static lv_obj_t *s_grid;
+static ui_header_t s_header;
 static uint32_t s_touched[3];
 static uint16_t s_touched_count;
 
@@ -42,17 +43,27 @@ static void update_status(void)
 
     if (s_touched_count == GRID_CELLS)
     {
-        ui_info_set(UI_PAGE_BLOCK_CHECK, "Coverage complete");
-        ui_info_set_detail(UI_PAGE_BLOCK_CHECK, "84 / 84 cells | complete");
+        ui_info_set(UI_PAGE_BLOCK_CHECK,
+                    ui_tr(UI_TEXT_BLOCK_COVERAGE_COMPLETE));
+        ui_info_set_detail(UI_PAGE_BLOCK_CHECK,
+                           ui_tr(UI_TEXT_BLOCK_COVERAGE_COMPLETE_DETAIL));
     }
     else
     {
-        ui_info_set(UI_PAGE_BLOCK_CHECK, "Block coverage");
-        lv_snprintf(text, sizeof(text), "%u / %u cells | %u left",
+        ui_info_set(UI_PAGE_BLOCK_CHECK, ui_tr(UI_TEXT_BLOCK_COVERAGE));
+        lv_snprintf(text, sizeof(text), ui_tr(UI_TEXT_BLOCK_COVERAGE_FORMAT),
                     (unsigned)s_touched_count, (unsigned)GRID_CELLS,
                     (unsigned)(GRID_CELLS - s_touched_count));
         ui_info_set_detail(UI_PAGE_BLOCK_CHECK, text);
     }
+}
+
+static void language_changed_cb(ui_language_t language)
+{
+    LV_UNUSED(language);
+    lv_label_set_text(s_header.title, ui_tr(UI_TEXT_PAGE_BLOCK_CHECK_TITLE));
+    lv_label_set_text(s_header.subtitle, ui_tr(UI_TEXT_PAGE_BLOCK_CHECK_SUBTITLE));
+    update_status();
 }
 
 static void grid_draw_cb(lv_event_t *event)
@@ -166,7 +177,8 @@ lv_obj_t *screen_block_check_create(lv_obj_t *parent)
 {
     lv_obj_t *page = ui_create_page(parent);
 
-    ui_create_header(page, "Block Check", "Sweep every cell and watch for untouched regions");
+    s_header = ui_create_header(page, ui_tr(UI_TEXT_PAGE_BLOCK_CHECK_TITLE),
+                                ui_tr(UI_TEXT_PAGE_BLOCK_CHECK_SUBTITLE));
 
     s_grid = lv_obj_create(page);
     lv_obj_set_size(s_grid, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
@@ -177,6 +189,7 @@ lv_obj_t *screen_block_check_create(lv_obj_t *parent)
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSING, NULL);
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_DRAW_MAIN_END, NULL);
 
+    (void)ui_i18n_subscribe(language_changed_cb);
     screen_block_check_reset();
     return page;
 }
