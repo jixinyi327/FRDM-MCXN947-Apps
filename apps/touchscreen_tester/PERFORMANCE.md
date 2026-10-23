@@ -30,9 +30,9 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           383,612 B
-m_data:           276,376 B / 312 KiB
-static RAM:       276,384 B
+m_text:           384,336 B
+m_data:           279,560 B / 312 KiB
+static RAM:       279,560 B
 audit failures:         0
 ```
 
@@ -75,6 +75,18 @@ Touchscreen tester started: 480x320, 16 ms UI cadence
 - build, audit, flash and startup checks pass; physical shake/color timing remains
   pending user confirmation.
 
+## Expanded Test Area and Two-Line Information
+
+- footer and both action buttons increased from 36 px to 48 px high;
+- the information area now contains a primary status row and a muted detail row;
+- shared test content increased from 440x184 to 456x198;
+- free-draw canvas increased from 400x160 to 408x164 to retain RAM headroom;
+- the display pipeline, TE mode and 16 ms UI cadence are unchanged;
+- static RAM is 279,560 B, below the 280,000 B audit warning threshold;
+- build, audit, flash and startup checks pass;
+- two-line readability and expanded test-area usability remain pending physical
+  confirmation.
+
 ## Physical Visual Evidence
 
 Pending user observation:
@@ -83,6 +95,7 @@ Pending user observation:
 - slow and fast free drawing;
 - two-minute continuous drawing;
 - footer alignment, equal button sizes and information updates;
+- two-line information readability without clipping;
 - menu open/close return path;
 - forward and backward page transitions;
 - bad-block grid coverage;

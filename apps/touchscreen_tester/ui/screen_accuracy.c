@@ -180,18 +180,23 @@ static void update_stats(uint32_t error_tenths, bool hit)
     if (hit)
     {
         lv_snprintf(text, sizeof(text),
-                    "Last %u.%u | Avg %u.%u | Best %u.%u px | N %u",
-                    (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U),
+                    "HIT %u.%u px",
+                    (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U));
+        ui_info_set(UI_PAGE_ACCURACY, text);
+        lv_snprintf(text, sizeof(text),
+                    "Avg %u.%u | Best %u.%u px | N %u",
                     (unsigned)(average_tenths / 10U), (unsigned)(average_tenths % 10U),
                     (unsigned)(s_best_error_tenths / 10U), (unsigned)(s_best_error_tenths % 10U),
                     (unsigned)s_attempt_count);
+        ui_info_set_detail(UI_PAGE_ACCURACY, text);
     }
     else
     {
-        lv_snprintf(text, sizeof(text), "MISS %u.%u px | tap inside target",
+        lv_snprintf(text, sizeof(text), "MISS %u.%u px",
                     (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U));
+        ui_info_set(UI_PAGE_ACCURACY, text);
+        ui_info_set_detail(UI_PAGE_ACCURACY, "Tap inside target and try again");
     }
-    ui_info_set(UI_PAGE_ACCURACY, text);
 }
 
 static void area_event_cb(lv_event_t *event)
@@ -302,5 +307,6 @@ void screen_accuracy_reset(void)
     s_target_x = (UI_CONTENT_WIDTH - TARGET_SIZE) / 2;
     s_target_y = (UI_CONTENT_HEIGHT - TARGET_SIZE) / 2;
     lv_obj_set_pos(s_target, s_target_x, s_target_y);
-    ui_info_set(UI_PAGE_ACCURACY, "Tap the moving target to begin");
+    ui_info_set(UI_PAGE_ACCURACY, "Accuracy reset");
+    ui_info_set_detail(UI_PAGE_ACCURACY, "Tap the moving target to begin");
 }

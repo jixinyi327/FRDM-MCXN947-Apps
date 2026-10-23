@@ -12,13 +12,13 @@
 #define UI_SCREEN_WIDTH 480
 #define UI_SCREEN_HEIGHT 320
 #define UI_HEADER_HEIGHT 52
-#define UI_CONTENT_LEFT 20
+#define UI_CONTENT_LEFT 12
 #define UI_CONTENT_TOP 54
-#define UI_CONTENT_WIDTH 440
-#define UI_CONTENT_HEIGHT 184
+#define UI_CONTENT_WIDTH 456
+#define UI_CONTENT_HEIGHT 198
 
 #define UI_FOOTER_MARGIN 12
-#define UI_FOOTER_HEIGHT 36
+#define UI_FOOTER_HEIGHT 48
 #define UI_FOOTER_BUTTON_WIDTH 72
 #define UI_FOOTER_GAP 8
 #define UI_FOOTER_TOP (UI_SCREEN_HEIGHT - UI_FOOTER_MARGIN - UI_FOOTER_HEIGHT)
@@ -46,8 +46,9 @@ lv_obj_t *ui_create_label(lv_obj_t *parent, const char *text, const lv_font_t *f
 lv_obj_t *ui_create_button(lv_obj_t *parent, const char *text, int32_t width, int32_t height);
 void ui_apply_card_style(lv_obj_t *obj);
 void ui_set_button_selected(lv_obj_t *button, bool selected);
-void ui_info_bind_label(lv_obj_t *label);
+void ui_info_bind_labels(lv_obj_t *primary_label, lv_obj_t *detail_label);
 void ui_info_focus(ui_page_t page);
 void ui_info_set(ui_page_t page, const char *text);
+void ui_info_set_detail(ui_page_t page, const char *text);
 
 #endif

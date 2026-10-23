@@ -52,7 +52,8 @@ static lv_obj_t *s_menu_panel;
 static lv_obj_t *s_menu_button;
 static lv_obj_t *s_control_bar;
 static lv_obj_t *s_reset_button;
-static lv_obj_t *s_info_label;
+static lv_obj_t *s_info_primary_label;
+static lv_obj_t *s_info_detail_label;
 static lv_anim_t s_menu_animation;
 static lv_anim_t s_page_animation;
 static page_anim_context_t s_page_anim_context;
@@ -309,6 +310,7 @@ static void reset_event_cb(lv_event_t *event)
             screen_block_check_reset();
             screen_accuracy_reset();
             ui_info_set(UI_PAGE_SETTINGS, "All test data reset");
+            ui_info_set_detail(UI_PAGE_SETTINGS, "Drawing, grid and stats cleared");
             break;
         default:
             break;
@@ -448,11 +450,16 @@ static void create_menu(lv_obj_t *root)
     lv_obj_add_flag(info_bar, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(info_bar, info_bar_event_cb, LV_EVENT_CLICKED, NULL);
 
-    s_info_label = ui_create_label(info_bar, "", &lv_font_montserrat_16, UI_COLOR_INK);
-    lv_obj_set_width(s_info_label, 272);
-    lv_obj_set_pos(s_info_label, 12, 8);
-    lv_label_set_long_mode(s_info_label, LV_LABEL_LONG_DOT);
-    ui_info_bind_label(s_info_label);
+    s_info_primary_label = ui_create_label(info_bar, "", &lv_font_montserrat_16, UI_COLOR_INK);
+    lv_obj_set_width(s_info_primary_label, 272);
+    lv_obj_set_pos(s_info_primary_label, 12, 2);
+    lv_label_set_long_mode(s_info_primary_label, LV_LABEL_LONG_DOT);
+
+    s_info_detail_label = ui_create_label(info_bar, "", &lv_font_montserrat_16, UI_COLOR_MUTED);
+    lv_obj_set_width(s_info_detail_label, 272);
+    lv_obj_set_pos(s_info_detail_label, 12, 24);
+    lv_label_set_long_mode(s_info_detail_label, LV_LABEL_LONG_DOT);
+    ui_info_bind_labels(s_info_primary_label, s_info_detail_label);
 
     s_menu_button = create_footer_button(s_control_bar, "TAB");
     lv_obj_set_pos(s_menu_button,

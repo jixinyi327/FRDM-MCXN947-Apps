@@ -42,13 +42,16 @@ static void update_status(void)
 
     if (s_touched_count == GRID_CELLS)
     {
-        ui_info_set(UI_PAGE_BLOCK_CHECK, "Full grid coverage reached");
+        ui_info_set(UI_PAGE_BLOCK_CHECK, "Coverage complete");
+        ui_info_set_detail(UI_PAGE_BLOCK_CHECK, "84 / 84 cells | complete");
     }
     else
     {
-        lv_snprintf(text, sizeof(text), "Covered %u / %u cells",
-                    (unsigned)s_touched_count, (unsigned)GRID_CELLS);
-        ui_info_set(UI_PAGE_BLOCK_CHECK, text);
+        ui_info_set(UI_PAGE_BLOCK_CHECK, "Block coverage");
+        lv_snprintf(text, sizeof(text), "%u / %u cells | %u left",
+                    (unsigned)s_touched_count, (unsigned)GRID_CELLS,
+                    (unsigned)(GRID_CELLS - s_touched_count));
+        ui_info_set_detail(UI_PAGE_BLOCK_CHECK, text);
     }
 }
 

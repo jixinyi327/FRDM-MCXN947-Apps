@@ -42,7 +42,8 @@ static void width_event_cb(lv_event_t *event)
         char text[48];
 
         lv_snprintf(text, sizeof(text), "Draw width: %u px", (unsigned)width);
-        ui_info_set(UI_PAGE_SETTINGS, text);
+        ui_info_set(UI_PAGE_SETTINGS, "Line width updated");
+        ui_info_set_detail(UI_PAGE_SETTINGS, text);
     }
 }
 
@@ -78,7 +79,8 @@ static void coordinate_switch_event_cb(lv_event_t *event)
     screen_free_draw_set_show_coordinates(s_show_coordinates);
     update_coordinate_switch(true);
     ui_info_set(UI_PAGE_SETTINGS,
-                s_show_coordinates ? "Touch coordinates: shown" : "Touch coordinates: hidden");
+                s_show_coordinates ? "Touch coordinates shown" : "Touch coordinates hidden");
+    ui_info_set_detail(UI_PAGE_SETTINGS, "Applied to the free draw page");
 }
 
 static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
@@ -176,7 +178,8 @@ lv_obj_t *screen_settings_create(lv_obj_t *parent)
     create_coordinate_switch(input_card);
     create_shortcuts_card(shortcuts_card);
 
-    ui_info_set(UI_PAGE_SETTINGS, "Settings ready | changes apply immediately");
+    ui_info_set(UI_PAGE_SETTINGS, "Settings ready");
+    ui_info_set_detail(UI_PAGE_SETTINGS, "Changes apply immediately");
 
     return page;
 }

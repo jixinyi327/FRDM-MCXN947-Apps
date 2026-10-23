@@ -4,8 +4,10 @@
 
 #include "ui_common.h"
 
-static lv_obj_t *s_info_label;
-static char s_info_text[UI_PAGE_COUNT][96];
+static lv_obj_t *s_info_primary_label;
+static lv_obj_t *s_info_detail_label;
+static char s_info_primary[UI_PAGE_COUNT][64];
+static char s_info_detail[UI_PAGE_COUNT][96];
 static ui_page_t s_info_page;
 
 lv_obj_t *ui_create_page(lv_obj_t *parent)
@@ -84,9 +86,10 @@ void ui_set_button_selected(lv_obj_t *button, bool selected)
     }
 }
 
-void ui_info_bind_label(lv_obj_t *label)
+void ui_info_bind_labels(lv_obj_t *primary_label, lv_obj_t *detail_label)
 {
-    s_info_label = label;
+    s_info_primary_label = primary_label;
+    s_info_detail_label = detail_label;
 }
 
 void ui_info_focus(ui_page_t page)
@@ -97,9 +100,13 @@ void ui_info_focus(ui_page_t page)
     }
 
     s_info_page = page;
-    if (s_info_label != NULL)
+    if (s_info_primary_label != NULL)
     {
-        lv_label_set_text(s_info_label, s_info_text[page]);
+        lv_label_set_text(s_info_primary_label, s_info_primary[page]);
+    }
+    if (s_info_detail_label != NULL)
+    {
+        lv_label_set_text(s_info_detail_label, s_info_detail[page]);
     }
 }
 
@@ -110,9 +117,23 @@ void ui_info_set(ui_page_t page, const char *text)
         return;
     }
 
-    lv_snprintf(s_info_text[page], sizeof(s_info_text[page]), "%s", text);
-    if ((page == s_info_page) && (s_info_label != NULL))
+    lv_snprintf(s_info_primary[page], sizeof(s_info_primary[page]), "%s", text);
+    if ((page == s_info_page) && (s_info_primary_label != NULL))
     {
-        lv_label_set_text(s_info_label, s_info_text[page]);
+        lv_label_set_text(s_info_primary_label, s_info_primary[page]);
+    }
+}
+
+void ui_info_set_detail(ui_page_t page, const char *text)
+{
+    if ((page >= UI_PAGE_COUNT) || (text == NULL))
+    {
+        return;
+    }
+
+    lv_snprintf(s_info_detail[page], sizeof(s_info_detail[page]), "%s", text);
+    if ((page == s_info_page) && (s_info_detail_label != NULL))
+    {
+        lv_label_set_text(s_info_detail_label, s_info_detail[page]);
     }
 }

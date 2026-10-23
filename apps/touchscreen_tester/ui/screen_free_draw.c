@@ -9,8 +9,8 @@
 
 #include "ui_common.h"
 
-#define DRAW_CANVAS_WIDTH 400U
-#define DRAW_CANVAS_HEIGHT 160U
+#define DRAW_CANVAS_WIDTH 408U
+#define DRAW_CANVAS_HEIGHT 164U
 
 static uint8_t s_canvas_pixels[DRAW_CANVAS_WIDTH * DRAW_CANVAS_HEIGHT];
 static lv_obj_t *s_canvas;
@@ -105,15 +105,17 @@ static void update_coordinate_label(const lv_point_t *point)
 
     if (!s_show_coordinates || (point == NULL))
     {
-        lv_snprintf(text, sizeof(text), "Drawing | width %u px | coordinates hidden",
+        ui_info_set(UI_PAGE_FREE_DRAW, "Drawing");
+        lv_snprintf(text, sizeof(text), "Coordinates hidden | width %u px",
                     (unsigned)s_line_width);
-        ui_info_set(UI_PAGE_FREE_DRAW, text);
+        ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
         return;
     }
 
+    ui_info_set(UI_PAGE_FREE_DRAW, "Touch input");
     lv_snprintf(text, sizeof(text), "x:%3d  y:%3d | width %u px",
                 (int)point->x, (int)point->y, (unsigned)s_line_width);
-    ui_info_set(UI_PAGE_FREE_DRAW, text);
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
 }
 
 static void canvas_event_cb(lv_event_t *event)
@@ -174,7 +176,9 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
 
     canvas_frame = lv_obj_create(page);
     lv_obj_set_size(canvas_frame, DRAW_CANVAS_WIDTH + 2, DRAW_CANVAS_HEIGHT + 2);
-    lv_obj_set_pos(canvas_frame, UI_CONTENT_LEFT, UI_CONTENT_TOP);
+    lv_obj_set_pos(canvas_frame,
+                   UI_CONTENT_LEFT + (UI_CONTENT_WIDTH - (DRAW_CANVAS_WIDTH + 2)) / 2,
+                   UI_CONTENT_TOP);
     ui_apply_card_style(canvas_frame);
     lv_obj_set_style_pad_all(canvas_frame, 0, 0);
     lv_obj_set_style_radius(canvas_frame, 8, 0);
@@ -195,11 +199,12 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
 
     s_canvas_draw_buf = lv_canvas_get_draw_buf(s_canvas);
 
-    s_hint_label = ui_create_label(page, "Canvas 400 x 160  |  line width 4 px",
+    s_hint_label = ui_create_label(page, "Canvas 408 x 164  |  line width 4 px",
                                    &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_set_pos(s_hint_label, UI_CONTENT_LEFT, 220);
+    lv_obj_set_pos(s_hint_label, UI_CONTENT_LEFT, 224);
 
-    ui_info_set(UI_PAGE_FREE_DRAW, "Ready | draw on the canvas");
+    ui_info_set(UI_PAGE_FREE_DRAW, "Free draw ready");
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, "Draw continuously to inspect touch");
 
     return page;
 }
@@ -215,6 +220,7 @@ void screen_free_draw_clear(void)
     s_has_last_point = false;
     lv_obj_invalidate(s_canvas);
     ui_info_set(UI_PAGE_FREE_DRAW, "Canvas cleared");
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, "Draw to start a new test");
 }
 
 void screen_free_draw_set_line_width(uint8_t width)
@@ -227,11 +233,12 @@ void screen_free_draw_set_line_width(uint8_t width)
         return;
     }
 
-    lv_snprintf(text, sizeof(text), "Canvas 400 x 160  |  line width %u px",
+    lv_snprintf(text, sizeof(text), "Canvas 408 x 164  |  line width %u px",
                 (unsigned)s_line_width);
     lv_label_set_text(s_hint_label, text);
-    lv_snprintf(text, sizeof(text), "Draw width set to %u px", (unsigned)s_line_width);
-    ui_info_set(UI_PAGE_FREE_DRAW, text);
+    ui_info_set(UI_PAGE_FREE_DRAW, "Line width updated");
+    lv_snprintf(text, sizeof(text), "%u px | continuous stroke", (unsigned)s_line_width);
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
 }
 
 void screen_free_draw_set_show_coordinates(bool show)
@@ -239,7 +246,7 @@ void screen_free_draw_set_show_coordinates(bool show)
     char text[96];
 
     s_show_coordinates = show;
-    lv_snprintf(text, sizeof(text), "Touch coordinates %s | width %u px",
-                show ? "shown" : "hidden", (unsigned)s_line_width);
-    ui_info_set(UI_PAGE_FREE_DRAW, text);
+    ui_info_set(UI_PAGE_FREE_DRAW, show ? "Touch coordinates shown" : "Touch coordinates hidden");
+    lv_snprintf(text, sizeof(text), "Draw width %u px", (unsigned)s_line_width);
+    ui_info_set_detail(UI_PAGE_FREE_DRAW, text);
 }
