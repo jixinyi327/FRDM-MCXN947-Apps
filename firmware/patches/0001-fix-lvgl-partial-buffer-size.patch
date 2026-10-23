@@ -1,0 +1,16 @@
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+index 5e16eefdd..bb034b911 100644
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+@@ -565,9 +565,9 @@ void lv_port_disp_init(void)
+     disp_drv = lv_display_create(LCD_WIDTH, LCD_HEIGHT);
+ 
+ #if (CONFIG_LVGL_SUPPORT_VDB_COUNT == 2)
+-    lv_display_set_buffers(disp_drv, (void*)s_frameBuffer[0], (void*)s_frameBuffer[1], LCD_VIRTUAL_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
++    lv_display_set_buffers(disp_drv, (void*)s_frameBuffer[0], (void*)s_frameBuffer[1], sizeof(s_frameBuffer[0]), LV_DISPLAY_RENDER_MODE_PARTIAL);
+ #else
+-    lv_display_set_buffers(disp_drv, (void*)s_frameBuffer[0], NULL, LCD_VIRTUAL_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
++    lv_display_set_buffers(disp_drv, (void*)s_frameBuffer[0], NULL, sizeof(s_frameBuffer[0]), LV_DISPLAY_RENDER_MODE_PARTIAL);
+ #endif
+     lv_display_set_flush_cb(disp_drv, DEMO_FlushDisplay);
+ }
