@@ -6,8 +6,6 @@
 
 #include <stdint.h>
 
-#include "screen_accuracy.h"
-#include "screen_block_check.h"
 #include "screen_free_draw.h"
 #include "ui_common.h"
 
@@ -16,7 +14,6 @@
 static lv_obj_t *s_width_buttons[WIDTH_BUTTON_COUNT];
 static lv_obj_t *s_coordinate_switch;
 static lv_obj_t *s_coordinate_knob;
-static lv_obj_t *s_action_status;
 static bool s_show_coordinates;
 
 static void knob_anim_cb(void *var, int32_t x)
@@ -41,6 +38,12 @@ static void width_event_cb(lv_event_t *event)
 
     screen_free_draw_set_line_width(width);
     update_width_buttons(width);
+    {
+        char text[48];
+
+        lv_snprintf(text, sizeof(text), "Draw width: %u px", (unsigned)width);
+        ui_info_set(UI_PAGE_SETTINGS, text);
+    }
 }
 
 static void update_coordinate_switch(bool animate)
@@ -74,16 +77,8 @@ static void coordinate_switch_event_cb(lv_event_t *event)
     s_show_coordinates = !s_show_coordinates;
     screen_free_draw_set_show_coordinates(s_show_coordinates);
     update_coordinate_switch(true);
-}
-
-static void reset_tests_event_cb(lv_event_t *event)
-{
-    LV_UNUSED(event);
-
-    screen_free_draw_clear();
-    screen_block_check_reset();
-    screen_accuracy_reset();
-    lv_label_set_text(s_action_status, "All test data reset");
+    ui_info_set(UI_PAGE_SETTINGS,
+                s_show_coordinates ? "Touch coordinates: shown" : "Touch coordinates: hidden");
 }
 
 static lv_obj_t *create_card(lv_obj_t *page, int32_t y, int32_t height)
@@ -150,18 +145,18 @@ static void create_coordinate_switch(lv_obj_t *card)
     update_coordinate_switch(false);
 }
 
-static void create_maintenance_card(lv_obj_t *card)
+static void create_shortcuts_card(lv_obj_t *card)
 {
-    lv_obj_t *label = ui_create_label(card, "Clear drawing and test history",
+    lv_obj_t *label = ui_create_label(card, "Footer controls",
                                       &lv_font_montserrat_16, UI_COLOR_INK);
-    lv_obj_t *reset_button;
+    lv_obj_t *description;
 
-    lv_obj_set_pos(label, 0, 5);
+    lv_obj_set_pos(label, 0, 0);
 
-    reset_button = ui_create_button(card, "Reset tests", 112, 34);
-    lv_obj_set_pos(reset_button, 280, 0);
-    lv_obj_set_style_bg_color(reset_button, UI_COLOR_DANGER, 0);
-    lv_obj_add_event_cb(reset_button, reset_tests_event_cb, LV_EVENT_CLICKED, NULL);
+    description = ui_create_label(card,
+                                  "Reset targets this page | TAB opens the test list",
+                                  &lv_font_montserrat_16, UI_COLOR_MUTED);
+    lv_obj_set_pos(description, 0, 24);
 }
 
 lv_obj_t *screen_settings_create(lv_obj_t *parent)
@@ -169,28 +164,19 @@ lv_obj_t *screen_settings_create(lv_obj_t *parent)
     lv_obj_t *page = ui_create_page(parent);
     lv_obj_t *drawing_card;
     lv_obj_t *input_card;
-    lv_obj_t *maintenance_card;
-    lv_obj_t *build_label;
+    lv_obj_t *shortcuts_card;
 
     ui_create_header(page, "Settings", "Adjust test presentation and reset test state");
 
     drawing_card = create_card(page, 54, 56);
     input_card = create_card(page, 116, 56);
-    maintenance_card = create_card(page, 178, 56);
+    shortcuts_card = create_card(page, 178, 72);
 
     create_width_buttons(drawing_card);
     create_coordinate_switch(input_card);
-    create_maintenance_card(maintenance_card);
+    create_shortcuts_card(shortcuts_card);
 
-    s_action_status = ui_create_label(page, "Changes apply immediately",
-                                      &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_set_pos(s_action_status, UI_CONTENT_LEFT, 240);
-
-    build_label = ui_create_label(page,
-                                  "UI core cm33_core0  |  ST7796S  |  GT911",
-                                  &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_set_pos(build_label, UI_CONTENT_LEFT, 278);
-    LV_UNUSED(build_label);
+    ui_info_set(UI_PAGE_SETTINGS, "Settings ready | changes apply immediately");
 
     return page;
 }

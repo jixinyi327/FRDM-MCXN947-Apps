@@ -4,6 +4,10 @@
 
 #include "ui_common.h"
 
+static lv_obj_t *s_info_label;
+static char s_info_text[UI_PAGE_COUNT][96];
+static ui_page_t s_info_page;
+
 lv_obj_t *ui_create_page(lv_obj_t *parent)
 {
     lv_obj_t *page = lv_obj_create(parent);
@@ -77,5 +81,38 @@ void ui_set_button_selected(lv_obj_t *button, bool selected)
     if (label != NULL)
     {
         lv_obj_set_style_text_color(label, selected ? lv_color_white() : UI_COLOR_INK, 0);
+    }
+}
+
+void ui_info_bind_label(lv_obj_t *label)
+{
+    s_info_label = label;
+}
+
+void ui_info_focus(ui_page_t page)
+{
+    if (page >= UI_PAGE_COUNT)
+    {
+        return;
+    }
+
+    s_info_page = page;
+    if (s_info_label != NULL)
+    {
+        lv_label_set_text(s_info_label, s_info_text[page]);
+    }
+}
+
+void ui_info_set(ui_page_t page, const char *text)
+{
+    if ((page >= UI_PAGE_COUNT) || (text == NULL))
+    {
+        return;
+    }
+
+    lv_snprintf(s_info_text[page], sizeof(s_info_text[page]), "%s", text);
+    if ((page == s_info_page) && (s_info_label != NULL))
+    {
+        lv_label_set_text(s_info_label, s_info_text[page]);
     }
 }

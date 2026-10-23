@@ -30,9 +30,9 @@
 
 ```text
 m_interrupts:         688 B
-m_text:           382,168 B
-m_data:           275,880 B / 312 KiB
-static RAM:       275,888 B
+m_text:           382,760 B
+m_data:           276,264 B / 312 KiB
+static RAM:       276,272 B
 audit failures:         0
 ```
 
@@ -49,6 +49,18 @@ reset produced exactly the expected startup line without a reset loop:
 Touchscreen tester started: 480x320, 16 ms UI cadence
 ```
 
+## Footer Layout Revision
+
+- Replaced the 58x58 circular TAB control with a 72x36 rectangular TAB control;
+- added an equally sized Reset button at the bottom-left;
+- added a 296x36 information bar between the buttons;
+- moved page status from page-local labels into per-page information strings;
+- reused the existing Double buffer and SmartDMA path without changing timing;
+- measured static RAM increase: 384 bytes;
+- build, audit, flash and startup checks pass;
+- physical footer alignment and information readability remain pending user
+  confirmation.
+
 ## Physical Visual Evidence
 
 Pending user observation:
@@ -56,6 +68,7 @@ Pending user observation:
 - static rendering;
 - slow and fast free drawing;
 - two-minute continuous drawing;
+- footer alignment, equal button sizes and information updates;
 - menu open/close return path;
 - forward and backward page transitions;
 - bad-block grid coverage;

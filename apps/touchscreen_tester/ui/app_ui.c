@@ -15,8 +15,8 @@
 
 #define PAGE_COUNT 4U
 #define MENU_ITEM_COUNT PAGE_COUNT
-#define MENU_CLOSED_WIDTH 58
-#define MENU_CLOSED_HEIGHT 58
+#define MENU_CLOSED_WIDTH UI_FOOTER_BUTTON_WIDTH
+#define MENU_CLOSED_HEIGHT UI_FOOTER_HEIGHT
 #define MENU_OPEN_WIDTH 206
 #define MENU_OPEN_HEIGHT 228
 #define MENU_ANIM_MS 180
@@ -50,6 +50,9 @@ static lv_obj_t *s_page_layer;
 static lv_obj_t *s_menu_overlay;
 static lv_obj_t *s_menu_panel;
 static lv_obj_t *s_menu_button;
+static lv_obj_t *s_control_bar;
+static lv_obj_t *s_reset_button;
+static lv_obj_t *s_info_label;
 static lv_anim_t s_menu_animation;
 static lv_anim_t s_page_animation;
 static page_anim_context_t s_page_anim_context;
@@ -87,6 +90,7 @@ static void page_transition_apply_result(void)
     s_current_page = s_page_anim_context.target_index;
     s_page_transition_active = false;
     menu_refresh_selection();
+    ui_info_focus((ui_page_t)s_current_page);
 }
 
 static void page_transition_cancel_and_apply(void)
@@ -166,7 +170,7 @@ static void menu_animation_cb(void *var, int32_t progress)
                     ((MENU_OPEN_WIDTH - MENU_CLOSED_WIDTH) * progress) / 1000;
     int32_t height = MENU_CLOSED_HEIGHT +
                      ((MENU_OPEN_HEIGHT - MENU_CLOSED_HEIGHT) * progress) / 1000;
-    int32_t radius = 29 - (13 * progress) / 1000;
+    int32_t radius = 8 + (6 * progress) / 1000;
     lv_opa_t opacity = (lv_opa_t)((progress * (int32_t)LV_OPA_COVER) / 1000);
 
     s_menu_progress = progress;
@@ -216,8 +220,10 @@ static void animate_menu(int32_t target_progress)
 
 static void open_menu(void)
 {
+    s_pending_page = -1;
     lv_obj_remove_flag(s_menu_overlay, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_foreground(s_menu_overlay);
+    lv_obj_move_foreground(s_control_bar);
     lv_obj_move_foreground(s_menu_button);
     animate_menu(1000);
 }
@@ -280,6 +286,61 @@ static void menu_item_event_cb(lv_event_t *event)
     close_menu();
 }
 
+static void reset_event_cb(lv_event_t *event)
+{
+    LV_UNUSED(event);
+
+    s_pending_page = -1;
+    close_menu();
+
+    switch ((ui_page_t)s_current_page)
+    {
+        case UI_PAGE_FREE_DRAW:
+            screen_free_draw_clear();
+            break;
+        case UI_PAGE_BLOCK_CHECK:
+            screen_block_check_reset();
+            break;
+        case UI_PAGE_ACCURACY:
+            screen_accuracy_reset();
+            break;
+        case UI_PAGE_SETTINGS:
+            screen_free_draw_clear();
+            screen_block_check_reset();
+            screen_accuracy_reset();
+            ui_info_set(UI_PAGE_SETTINGS, "All test data reset");
+            break;
+        default:
+            break;
+    }
+}
+
+static void info_bar_event_cb(lv_event_t *event)
+{
+    if (lv_event_get_code(event) == LV_EVENT_CLICKED)
+    {
+        s_pending_page = -1;
+        close_menu();
+    }
+}
+
+static lv_obj_t *create_footer_button(lv_obj_t *parent, const char *text)
+{
+    lv_obj_t *button = lv_button_create(parent);
+    lv_obj_t *label;
+
+    lv_obj_set_size(button, UI_FOOTER_BUTTON_WIDTH, UI_FOOTER_HEIGHT);
+    lv_obj_set_style_radius(button, 8, 0);
+    lv_obj_set_style_border_width(button, 0, 0);
+    lv_obj_set_style_pad_all(button, 0, 0);
+    lv_obj_remove_flag(button, LV_OBJ_FLAG_SCROLLABLE);
+
+    label = ui_create_label(button, text, &lv_font_montserrat_16, lv_color_white());
+    lv_obj_center(label);
+
+    return button;
+}
+
 static lv_obj_t *create_menu_item(lv_obj_t *parent, uint8_t index)
 {
     lv_obj_t *button = lv_button_create(parent);
@@ -319,7 +380,9 @@ static lv_obj_t *create_menu_item(lv_obj_t *parent, uint8_t index)
 
 static void create_menu(lv_obj_t *root)
 {
-    lv_obj_t *button_label;
+    lv_obj_t *reset_label;
+    lv_obj_t *info_bar;
+    lv_obj_t *tab_label;
     uint32_t i;
 
     s_menu_overlay = lv_obj_create(root);
@@ -335,11 +398,13 @@ static void create_menu(lv_obj_t *root)
 
     s_menu_panel = lv_obj_create(s_menu_overlay);
     lv_obj_set_size(s_menu_panel, MENU_CLOSED_WIDTH, MENU_CLOSED_HEIGHT);
-    lv_obj_align(s_menu_panel, LV_ALIGN_BOTTOM_RIGHT, -14, -72);
+    lv_obj_align(s_menu_panel, LV_ALIGN_BOTTOM_RIGHT,
+                 -UI_FOOTER_MARGIN,
+                 -(UI_FOOTER_MARGIN + UI_FOOTER_HEIGHT + UI_FOOTER_GAP));
     ui_apply_card_style(s_menu_panel);
     lv_obj_set_style_pad_all(s_menu_panel, 8, 0);
     lv_obj_set_style_pad_row(s_menu_panel, 6, 0);
-    lv_obj_set_style_radius(s_menu_panel, 29, 0);
+    lv_obj_set_style_radius(s_menu_panel, 8, 0);
     lv_obj_set_style_opa(s_menu_panel, LV_OPA_TRANSP, 0);
     lv_obj_set_flex_flow(s_menu_panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(s_menu_panel, LV_FLEX_ALIGN_START,
@@ -351,19 +416,52 @@ static void create_menu(lv_obj_t *root)
     }
     menu_refresh_selection();
 
-    s_menu_button = lv_button_create(root);
-    lv_obj_set_size(s_menu_button, MENU_CLOSED_WIDTH, MENU_CLOSED_HEIGHT);
-    lv_obj_align(s_menu_button, LV_ALIGN_BOTTOM_RIGHT, -14, -14);
-    lv_obj_set_style_radius(s_menu_button, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(s_menu_button, UI_COLOR_ACCENT, 0);
-    lv_obj_set_style_bg_opa(s_menu_button, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(s_menu_button, 0, 0);
-    lv_obj_set_style_pad_all(s_menu_button, 0, 0);
-    lv_obj_add_event_cb(s_menu_button, menu_button_event_cb, LV_EVENT_CLICKED, NULL);
+    s_control_bar = lv_obj_create(root);
+    lv_obj_set_size(s_control_bar,
+                    UI_SCREEN_WIDTH - (UI_FOOTER_MARGIN * 2),
+                    UI_FOOTER_HEIGHT);
+    lv_obj_set_pos(s_control_bar, UI_FOOTER_MARGIN, UI_FOOTER_TOP);
+    lv_obj_set_style_bg_opa(s_control_bar, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(s_control_bar, 0, 0);
+    lv_obj_set_style_pad_all(s_control_bar, 0, 0);
+    lv_obj_remove_flag(s_control_bar, LV_OBJ_FLAG_SCROLLABLE);
 
-    button_label = ui_create_label(s_menu_button, "TAB",
-                                   &lv_font_montserrat_16, lv_color_white());
-    lv_obj_center(button_label);
+    s_reset_button = create_footer_button(s_control_bar, "Reset");
+    lv_obj_set_pos(s_reset_button, 0, 0);
+    lv_obj_set_style_bg_color(s_reset_button, UI_COLOR_SURFACE, 0);
+    lv_obj_set_style_border_color(s_reset_button, UI_COLOR_DANGER, 0);
+    lv_obj_set_style_border_width(s_reset_button, 1, 0);
+    reset_label = lv_obj_get_child(s_reset_button, 0);
+    lv_obj_set_style_text_color(reset_label, UI_COLOR_DANGER, 0);
+    lv_obj_add_event_cb(s_reset_button, reset_event_cb, LV_EVENT_CLICKED, NULL);
+
+    info_bar = lv_obj_create(s_control_bar);
+    lv_obj_set_size(info_bar, 296, UI_FOOTER_HEIGHT);
+    lv_obj_set_pos(info_bar, UI_FOOTER_BUTTON_WIDTH + UI_FOOTER_GAP, 0);
+    lv_obj_set_style_bg_color(info_bar, UI_COLOR_SURFACE, 0);
+    lv_obj_set_style_bg_opa(info_bar, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_color(info_bar, UI_COLOR_BORDER, 0);
+    lv_obj_set_style_border_width(info_bar, 1, 0);
+    lv_obj_set_style_radius(info_bar, 8, 0);
+    lv_obj_set_style_pad_all(info_bar, 0, 0);
+    lv_obj_remove_flag(info_bar, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(info_bar, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(info_bar, info_bar_event_cb, LV_EVENT_CLICKED, NULL);
+
+    s_info_label = ui_create_label(info_bar, "", &lv_font_montserrat_16, UI_COLOR_INK);
+    lv_obj_set_width(s_info_label, 272);
+    lv_obj_set_pos(s_info_label, 12, 8);
+    lv_label_set_long_mode(s_info_label, LV_LABEL_LONG_DOT);
+    ui_info_bind_label(s_info_label);
+
+    s_menu_button = create_footer_button(s_control_bar, "TAB");
+    lv_obj_set_pos(s_menu_button,
+                   UI_SCREEN_WIDTH - (UI_FOOTER_MARGIN * 2) - UI_FOOTER_BUTTON_WIDTH,
+                   0);
+    lv_obj_set_style_bg_color(s_menu_button, UI_COLOR_ACCENT, 0);
+    lv_obj_add_event_cb(s_menu_button, menu_button_event_cb, LV_EVENT_CLICKED, NULL);
+    tab_label = lv_obj_get_child(s_menu_button, 0);
+    lv_obj_set_style_text_color(tab_label, lv_color_white(), 0);
 }
 
 void app_ui_init(void)
@@ -399,4 +497,5 @@ void app_ui_init(void)
     create_menu(root);
     screen_free_draw_set_line_width(4U);
     menu_refresh_selection();
+    ui_info_focus(UI_PAGE_FREE_DRAW);
 }

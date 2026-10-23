@@ -22,7 +22,6 @@ typedef struct {
 
 static lv_obj_t *s_area;
 static lv_obj_t *s_target;
-static lv_obj_t *s_stats_label;
 static target_anim_context_t s_target_anim_context;
 static lv_anim_t s_target_anim;
 static int32_t s_target_x;
@@ -101,7 +100,7 @@ static void move_target_to_random_position(void)
 
 static void update_stats(uint32_t error_tenths)
 {
-    char text[112];
+    char text[96];
     uint32_t average_tenths;
 
     s_attempt_count++;
@@ -113,12 +112,12 @@ static void update_stats(uint32_t error_tenths)
 
     average_tenths = s_total_error_tenths / s_attempt_count;
     lv_snprintf(text, sizeof(text),
-                "Last %u.%u px  Avg %u.%u px  Best %u.%u px  N %u",
+                "Last %u.%u | Avg %u.%u | Best %u.%u px | N %u",
                 (unsigned)(error_tenths / 10U), (unsigned)(error_tenths % 10U),
                 (unsigned)(average_tenths / 10U), (unsigned)(average_tenths % 10U),
                 (unsigned)(s_best_error_tenths / 10U), (unsigned)(s_best_error_tenths % 10U),
                 (unsigned)s_attempt_count);
-    lv_label_set_text(s_stats_label, text);
+    ui_info_set(UI_PAGE_ACCURACY, text);
 }
 
 static void area_event_cb(lv_event_t *event)
@@ -152,25 +151,14 @@ static void area_event_cb(lv_event_t *event)
     }
 }
 
-static void reset_event_cb(lv_event_t *event)
-{
-    LV_UNUSED(event);
-    screen_accuracy_reset();
-}
-
 lv_obj_t *screen_accuracy_create(lv_obj_t *parent)
 {
     lv_obj_t *page = ui_create_page(parent);
-    lv_obj_t *reset_button;
     lv_obj_t *horizontal_mark;
     lv_obj_t *vertical_mark;
     lv_obj_t *center_mark;
 
     ui_create_header(page, "Touch Accuracy", "Tap the center of each moving target");
-
-    reset_button = ui_create_button(page, "Reset", 82, 34);
-    lv_obj_align(reset_button, LV_ALIGN_TOP_RIGHT, -20, 8);
-    lv_obj_add_event_cb(reset_button, reset_event_cb, LV_EVENT_CLICKED, NULL);
 
     s_area = lv_obj_create(page);
     lv_obj_set_size(s_area, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
@@ -197,10 +185,6 @@ lv_obj_t *screen_accuracy_create(lv_obj_t *parent)
     LV_UNUSED(vertical_mark);
     LV_UNUSED(center_mark);
 
-    s_stats_label = ui_create_label(page, "Tap the target to begin",
-                                     &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_set_pos(s_stats_label, UI_CONTENT_LEFT, 246);
-
     s_target_x = (UI_CONTENT_WIDTH - TARGET_SIZE) / 2;
     s_target_y = (UI_CONTENT_HEIGHT - TARGET_SIZE) / 2;
     lv_obj_set_pos(s_target, s_target_x, s_target_y);
@@ -223,5 +207,5 @@ void screen_accuracy_reset(void)
     s_target_x = (UI_CONTENT_WIDTH - TARGET_SIZE) / 2;
     s_target_y = (UI_CONTENT_HEIGHT - TARGET_SIZE) / 2;
     lv_obj_set_pos(s_target, s_target_x, s_target_y);
-    lv_label_set_text(s_stats_label, "Tap the target to begin");
+    ui_info_set(UI_PAGE_ACCURACY, "Tap the moving target to begin");
 }

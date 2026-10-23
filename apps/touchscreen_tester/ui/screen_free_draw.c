@@ -16,7 +16,6 @@ static uint8_t s_canvas_pixels[DRAW_CANVAS_WIDTH * DRAW_CANVAS_HEIGHT];
 static lv_obj_t *s_canvas;
 static lv_draw_buf_t *s_canvas_draw_buf;
 static lv_obj_t *s_hint_label;
-static lv_obj_t *s_coordinate_label;
 static uint8_t s_line_width = 4U;
 static bool s_show_coordinates;
 static bool s_has_last_point;
@@ -102,16 +101,19 @@ static void invalidate_canvas_patch(int32_t min_x, int32_t min_y, int32_t max_x,
 
 static void update_coordinate_label(const lv_point_t *point)
 {
-    char text[48];
+    char text[96];
 
     if (!s_show_coordinates || (point == NULL))
     {
-        lv_label_set_text(s_coordinate_label, "Coordinates hidden");
+        lv_snprintf(text, sizeof(text), "Drawing | width %u px | coordinates hidden",
+                    (unsigned)s_line_width);
+        ui_info_set(UI_PAGE_FREE_DRAW, text);
         return;
     }
 
-    lv_snprintf(text, sizeof(text), "x:%3d  y:%3d", (int)point->x, (int)point->y);
-    lv_label_set_text(s_coordinate_label, text);
+    lv_snprintf(text, sizeof(text), "x:%3d  y:%3d | width %u px",
+                (int)point->x, (int)point->y, (unsigned)s_line_width);
+    ui_info_set(UI_PAGE_FREE_DRAW, text);
 }
 
 static void canvas_event_cb(lv_event_t *event)
@@ -163,24 +165,12 @@ static void canvas_event_cb(lv_event_t *event)
     }
 }
 
-static void clear_event_cb(lv_event_t *event)
-{
-    LV_UNUSED(event);
-    screen_free_draw_clear();
-}
-
 lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
 {
     lv_obj_t *page = ui_create_page(parent);
-    lv_obj_t *clear_button;
-    lv_obj_t *hint_label;
     lv_obj_t *canvas_frame;
 
     ui_create_header(page, "Free Draw", "Draw continuously to inspect touch continuity");
-
-    clear_button = ui_create_button(page, "Clear", 82, 34);
-    lv_obj_align(clear_button, LV_ALIGN_TOP_RIGHT, -20, 8);
-    lv_obj_add_event_cb(clear_button, clear_event_cb, LV_EVENT_CLICKED, NULL);
 
     canvas_frame = lv_obj_create(page);
     lv_obj_set_size(canvas_frame, DRAW_CANVAS_WIDTH + 2, DRAW_CANVAS_HEIGHT + 2);
@@ -209,9 +199,7 @@ lv_obj_t *screen_free_draw_create(lv_obj_t *parent)
                                    &lv_font_montserrat_16, UI_COLOR_MUTED);
     lv_obj_set_pos(s_hint_label, UI_CONTENT_LEFT, 220);
 
-    s_coordinate_label = ui_create_label(page, "Coordinates hidden",
-                                         &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_align(s_coordinate_label, LV_ALIGN_BOTTOM_RIGHT, -96, -22);
+    ui_info_set(UI_PAGE_FREE_DRAW, "Ready | draw on the canvas");
 
     return page;
 }
@@ -226,6 +214,7 @@ void screen_free_draw_clear(void)
     memset(s_canvas_pixels, 0xFF, sizeof(s_canvas_pixels));
     s_has_last_point = false;
     lv_obj_invalidate(s_canvas);
+    ui_info_set(UI_PAGE_FREE_DRAW, "Canvas cleared");
 }
 
 void screen_free_draw_set_line_width(uint8_t width)
@@ -241,13 +230,16 @@ void screen_free_draw_set_line_width(uint8_t width)
     lv_snprintf(text, sizeof(text), "Canvas 400 x 160  |  line width %u px",
                 (unsigned)s_line_width);
     lv_label_set_text(s_hint_label, text);
+    lv_snprintf(text, sizeof(text), "Draw width set to %u px", (unsigned)s_line_width);
+    ui_info_set(UI_PAGE_FREE_DRAW, text);
 }
 
 void screen_free_draw_set_show_coordinates(bool show)
 {
+    char text[96];
+
     s_show_coordinates = show;
-    if (s_coordinate_label != NULL)
-    {
-        lv_label_set_text(s_coordinate_label, show ? "x:---  y:---" : "Coordinates hidden");
-    }
+    lv_snprintf(text, sizeof(text), "Touch coordinates %s | width %u px",
+                show ? "shown" : "hidden", (unsigned)s_line_width);
+    ui_info_set(UI_PAGE_FREE_DRAW, text);
 }

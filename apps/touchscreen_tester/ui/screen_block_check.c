@@ -15,7 +15,6 @@
 #define GRID_GAP 2
 
 static lv_obj_t *s_grid;
-static lv_obj_t *s_status_label;
 static uint32_t s_touched[3];
 static uint16_t s_touched_count;
 
@@ -43,15 +42,13 @@ static void update_status(void)
 
     if (s_touched_count == GRID_CELLS)
     {
-        lv_label_set_text(s_status_label, "Full grid coverage reached");
-        lv_obj_set_style_text_color(s_status_label, UI_COLOR_ACCENT, 0);
+        ui_info_set(UI_PAGE_BLOCK_CHECK, "Full grid coverage reached");
     }
     else
     {
         lv_snprintf(text, sizeof(text), "Covered %u / %u cells",
                     (unsigned)s_touched_count, (unsigned)GRID_CELLS);
-        lv_label_set_text(s_status_label, text);
-        lv_obj_set_style_text_color(s_status_label, UI_COLOR_MUTED, 0);
+        ui_info_set(UI_PAGE_BLOCK_CHECK, text);
     }
 }
 
@@ -162,23 +159,11 @@ static void grid_event_cb(lv_event_t *event)
     }
 }
 
-static void reset_event_cb(lv_event_t *event)
-{
-    LV_UNUSED(event);
-    screen_block_check_reset();
-}
-
 lv_obj_t *screen_block_check_create(lv_obj_t *parent)
 {
     lv_obj_t *page = ui_create_page(parent);
-    lv_obj_t *instruction;
-    lv_obj_t *reset_button;
 
     ui_create_header(page, "Block Check", "Sweep every cell and watch for untouched regions");
-
-    reset_button = ui_create_button(page, "Reset", 82, 34);
-    lv_obj_align(reset_button, LV_ALIGN_TOP_RIGHT, -20, 8);
-    lv_obj_add_event_cb(reset_button, reset_event_cb, LV_EVENT_CLICKED, NULL);
 
     s_grid = lv_obj_create(page);
     lv_obj_set_size(s_grid, UI_CONTENT_WIDTH, UI_CONTENT_HEIGHT);
@@ -189,15 +174,6 @@ lv_obj_t *screen_block_check_create(lv_obj_t *parent)
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSED, NULL);
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_PRESSING, NULL);
     lv_obj_add_event_cb(s_grid, grid_event_cb, LV_EVENT_DRAW_MAIN_END, NULL);
-
-    s_status_label = ui_create_label(page, "Covered 0 / 84 cells",
-                                     &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_set_pos(s_status_label, UI_CONTENT_LEFT, 246);
-
-    instruction = ui_create_label(page, "Unfilled cells remain untested",
-                                  &lv_font_montserrat_16, UI_COLOR_MUTED);
-    lv_obj_align(instruction, LV_ALIGN_BOTTOM_RIGHT, -96, -22);
-    LV_UNUSED(instruction);
 
     screen_block_check_reset();
     return page;
@@ -210,10 +186,7 @@ void screen_block_check_reset(void)
     s_touched[2] = 0U;
     s_touched_count = 0U;
 
-    if (s_status_label != NULL)
-    {
-        update_status();
-    }
+    update_status();
     if (s_grid != NULL)
     {
         lv_obj_invalidate(s_grid);
