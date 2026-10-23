@@ -1,0 +1,16 @@
+config secondary_board
+    string
+    default "frdmmcxn947"
+
+config secondary_config
+    string
+    default "debug" if $(config) = "debug"
+    default "release" if $(config) = "release"
+
+config secondary_core_id
+    string
+    default "cm33_core1" if $(core_id) = "cm33_core0"
+
+config secondary_toolchain
+    string
+    default "$(toolchain)"

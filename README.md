@@ -3,10 +3,14 @@
 面向 FRDM-MCXN947 + LCD-PAR-S035 的多应用开发仓库。仓库包含可复现的开发环境、
 MCUXpresso SDK 补丁、LVGL UI Skill，以及可复用的应用构建和烧写流程。
 
-`apps/touchscreen_tester/` 是仓库中的第一个应用，运行在 `cm33_core0`。后续应用统一放在
-`apps/<app_name>/`，各自拥有独立的 `README.md`、构建入口和资源配置。
+当前应用：
 
-触摸屏测试应用当前功能：
+- `apps/touchscreen_tester/`：触摸屏测试应用；
+- `apps/oscilloscope/`：ADC + DMA + PowerQuad FFT 双核示波器。
+
+后续应用统一放在 `apps/<app_name>/`，各自拥有独立的 `README.md`、构建入口和资源配置。
+
+触摸屏测试应用功能：
 
 - 自由绘制；
 - 触摸坏块检测；
@@ -43,6 +47,7 @@ git push -u origin main
 ```text
 .
 ├── apps/touchscreen_tester/  触摸屏测试应用
+├── apps/oscilloscope/        双核 ADC 示波器与频谱分析
 ├── firmware/patches/         SDK 显示与触摸补丁
 ├── skills/lvgl-ui/           LVGL UI 设计、本地化和工程规范
 ├── skills/frdm-mcxn947-lvgl-ui-performance/
@@ -53,7 +58,10 @@ git push -u origin main
 └── .venv/                    west/CMake/Ninja/Python 工具，Git 忽略
 ```
 
-应用说明：[apps/touchscreen_tester/README.md](apps/touchscreen_tester/README.md)
+应用说明：
+
+- [触摸屏测试](apps/touchscreen_tester/README.md)
+- [示波器](apps/oscilloscope/README.md)
 
 仓库约定：
 
@@ -474,5 +482,7 @@ LinkServer reset 'MCXN947:FRDM-MCXN947' -p <probe> --ms 250 --update-mode none
 - [首次烧录与串口验证](development-plan/07_first_flash_and_serial_validation.md)
 - [SDK 工程与构建系统](development-plan/08_sdk_projects_and_build_system.md)
 - [屏幕选型与适配](development-plan/display-integration/README.md)
-- [应用详细说明](apps/touchscreen_tester/README.md)
-- [性能记录](apps/touchscreen_tester/PERFORMANCE.md)
+- [触摸屏测试说明](apps/touchscreen_tester/README.md)
+- [触摸屏性能记录](apps/touchscreen_tester/PERFORMANCE.md)
+- [示波器说明](apps/oscilloscope/README.md)
+- [示波器性能记录](apps/oscilloscope/PERFORMANCE.md)

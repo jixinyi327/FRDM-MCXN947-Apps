@@ -132,11 +132,11 @@ fi
 
 printf '\n== UI cadence ==\n'
 
-if has '#define LVGL_TASK_PERIOD_TICK 16U' "$UI_MAIN"; then
+if has '#define[[:space:]]+(LVGL_TASK_PERIOD_TICK|UI_TASK_PERIOD_TICKS)[[:space:]]+16U' "$UI_MAIN"; then
     pass 'UI target is about 60 FPS (16 ms)'
-elif has '#define LVGL_TASK_PERIOD_TICK 33U' "$UI_MAIN"; then
+elif has '#define[[:space:]]+(LVGL_TASK_PERIOD_TICK|UI_TASK_PERIOD_TICKS)[[:space:]]+33U' "$UI_MAIN"; then
     warn 'UI target is about 30 FPS; acceptable for lower resource use'
-elif has '#define LVGL_TASK_PERIOD_TICK 5U' "$UI_MAIN"; then
+elif has '#define[[:space:]]+(LVGL_TASK_PERIOD_TICK|UI_TASK_PERIOD_TICKS)[[:space:]]+5U' "$UI_MAIN"; then
     warn 'UI loop is 5 ms, much faster than the panel scan'
 fi
 
