@@ -10,6 +10,8 @@ documentation. Reproduce the environment using the versions below.
 | SDK manifests revision | `0a103dfa35e7d6ae1eabf516488259fb9b423075` |
 | MCUXpresso SDK core revision | `c6f4223f45fdab59509f25ee3ea63a71bd29d8aa` |
 | Arm GNU Toolchain | 14.2.Rel1, GCC 14.2.1 |
+| Node.js | 24.22.1 |
+| lv_font_conv | 1.5.3 |
 | west | 1.5.0 |
 | CMake | 3.31.10 |
 | Ninja | 1.13.2 |

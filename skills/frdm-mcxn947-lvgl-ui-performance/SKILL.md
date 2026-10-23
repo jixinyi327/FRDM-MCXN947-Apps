@@ -133,8 +133,8 @@ change as a numbered patch under `firmware/patches/` and document it in
 Before editing, inspect current Git and SDK state:
 
 ```bash
-git -C /home/jxy/NXP/MCXN947 status --short --branch
-git -C /home/jxy/NXP/MCXN947/mcuxpresso-sdk/mcuxsdk/examples status --short
+git -C "$MCXN_ROOT" status --short --branch
+git -C "$MCXN_ROOT"/mcuxpresso-sdk/mcuxsdk/examples status --short
 ```
 
 Do not overwrite unrelated SDK changes. Verify patch fidelity against the

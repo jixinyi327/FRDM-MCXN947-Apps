@@ -34,7 +34,7 @@
 - 在扩展中重新创建一个由 NXP 管理的 SDK；
 - 把 WSL 内的 SDK 复制到 Windows 可访问目录后导入。
 
-跨 WSL/Windows 访问 `/home/jxy` 的 `\\wsl$\...` 路径可能降低文件系统性能，也会让工具路径和权限更复杂。长期项目建议在 Windows 盘放一份 SDK，或在 WSL 中完成完整构建，只把调试交给 Windows。
+跨 WSL/Windows 访问 `\\wsl$\...` 路径可能降低文件系统性能，也会让工具路径和权限更复杂。长期项目建议在 Windows 盘放一份 SDK，或在 WSL 中完成完整构建，只把调试交给 Windows。
 
 ### 2.3 导入示例
 
@@ -70,14 +70,17 @@ ms-vscode.vscode-serial-monitor@0.13.1
 打开目录：
 
 ```bash
-code /home/jxy/NXP/MCXN947
+cd <repository-directory>
+code .
 ```
 
-`.vscode/settings.json` 已设置本机 GCC 和 LinkServer 路径。若扩展把 `mcuxpresso.linkserver.path` 当作 machine-scope 设置而不读取 workspace 值，可在 WSL 的 User Settings JSON 中同样设置：
+`.vscode/settings.json` 使用工作区相对路径设置 GCC 和 LinkServer。若扩展把
+`mcuxpresso.linkserver.path` 当作 machine-scope 设置而不读取 workspace 值，可在
+WSL 的 User Settings JSON 中使用当前机器的实际路径：
 
 ```json
 {
-  "mcuxpresso.linkserver.path": "/home/jxy/NXP/MCXN947/tools/linkserver/usr/local/LinkServer_26.9.130/LinkServer"
+  "mcuxpresso.linkserver.path": "<absolute-path-to-repository>/tools/linkserver/usr/local/LinkServer_26.9.130/LinkServer"
 }
 ```
 

@@ -178,7 +178,35 @@ python3 -m venv .venv
   Jinja2==3.1.6
 ```
 
-### 4. Arm GNU Toolchain
+### 4. Node.js 与字体生成器
+
+只有修改中文 UI 文案并重新生成字体时才需要这一组工具。固定版本可以避免不同设备
+生成出不同字形数据：
+
+```bash
+mkdir -p downloads toolchains tools/lv_font_conv
+
+curl -L --retry 5 \
+  -o downloads/node-v24.22.1-linux-x64.tar.xz \
+  'https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz'
+
+printf '%s  %s\n' \
+  '6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6' \
+  'downloads/node-v24.22.1-linux-x64.tar.xz' |
+  sha256sum -c -
+
+tar -xJf downloads/node-v24.22.1-linux-x64.tar.xz -C toolchains
+
+source development-plan/scripts/env.sh
+npm install \
+  --prefix tools/lv_font_conv \
+  --no-audit --no-fund --no-save \
+  lv_font_conv@1.5.3
+```
+
+`manage_dev_env.sh --setup` 会自动完成本节。
+
+### 5. Arm GNU Toolchain
 
 ```bash
 mkdir -p toolchains downloads
@@ -192,7 +220,7 @@ tar -xJf \
   -C toolchains
 ```
 
-### 5. MCUXpresso SDK 26.09
+### 6. MCUXpresso SDK 26.09
 
 ```bash
 export PATH="$PWD/.venv/bin:$PATH"
@@ -209,7 +237,7 @@ west update_board --set board frdmmcxn947
 SDK 完整同步约 7.8 GB，下载时间取决于网络。详细流程见
 [WSL2 命令行环境](development-plan/05_wsl2_command_line_environment.md)。
 
-### 6. LinkServer 26.9.130
+### 7. LinkServer 26.9.130
 
 ```bash
 cd "$WORKSPACE"
@@ -229,7 +257,7 @@ dpkg-deb -x \
   tools/linkserver
 ```
 
-### 7. 设置当前终端环境
+### 8. 设置当前终端环境
 
 每次打开新终端都执行：
 

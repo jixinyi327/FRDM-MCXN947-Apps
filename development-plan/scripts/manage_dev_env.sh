@@ -3,7 +3,7 @@
 # Reproducible FRDM-MCXN947 environment manager.
 # Supported host: Linux x86_64, especially Ubuntu 22.04/24.04 and WSL2.
 #
-set -uo pipefail
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -24,6 +24,15 @@ fi
 ARM_ARCHIVE="arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz"
 ARM_URL="https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/$ARM_ARCHIVE"
 ARM_SHA256="62a63b981fe391a9cbad7ef51b17e49aeaa3e7b0d029b36ca1e9c3b2a9b78823"
+
+NODE_VERSION="v24.22.1"
+NODE_ARCHIVE="node-v24.22.1-linux-x64.tar.xz"
+NODE_DIR_NAME="node-v24.22.1-linux-x64"
+NODE_URL="https://nodejs.org/dist/$NODE_VERSION/$NODE_ARCHIVE"
+NODE_SHA256="6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6"
+
+LV_FONT_CONV_VERSION="1.5.3"
+LV_FONT_CONV_DIR="$REPO_ROOT/tools/lv_font_conv"
 
 LINKSERVER_ARCHIVE="LinkServer_26.9.130.x86_64.deb.bin"
 LINKSERVER_URL="https://www.nxp.com/lgfiles/updates/mcuxpresso/$LINKSERVER_ARCHIVE"
@@ -211,7 +220,7 @@ check_environment() {
     fi
 
     printf '\n== Required commands ==\n'
-    for required in git python3 curl tar xz unzip ninja west cmake \
+    for required in git python3 curl tar xz unzip ninja west cmake node npm npx \
                     arm-none-eabi-gcc LinkServer; do
         if command -v "$required" >/dev/null 2>&1; then
             pass "$required: $(command -v "$required")"
@@ -232,7 +241,7 @@ check_environment() {
     fi
 
     if command -v python3 >/dev/null; then
-        python_version="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+        python_version="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])' || true)"
         if awk -v v="$python_version" 'BEGIN { exit !(v >= 3.10) }'; then
             pass "Python $python_version"
         else
@@ -243,7 +252,7 @@ check_environment() {
 
     if command -v arm-none-eabi-gcc >/dev/null; then
         local gcc_version
-        gcc_version="$(arm-none-eabi-gcc -dumpversion)"
+        gcc_version="$(arm-none-eabi-gcc -dumpversion || true)"
         if [[ "$gcc_version" == 14.2.* ]]; then
             pass "Arm GCC $gcc_version"
         else
@@ -254,7 +263,7 @@ check_environment() {
 
     if command -v west >/dev/null; then
         local west_version
-        west_version="$(west --version | awk '{print $NF}' | sed 's/^v//')"
+        west_version="$(west --version | awk '{print $NF}' | sed 's/^v//' || true)"
         if [[ "$west_version" == "1.5.0" ]]; then
             pass "west $west_version"
         else
@@ -265,7 +274,7 @@ check_environment() {
 
     if command -v cmake >/dev/null; then
         local cmake_version
-        cmake_version="$(cmake --version | awk 'NR==1 {print $3}')"
+        cmake_version="$(cmake --version | awk 'NR==1 {print $3}' || true)"
         if version_ge "$cmake_version" "3.22.0"; then
             pass "CMake $cmake_version"
         else
@@ -276,7 +285,7 @@ check_environment() {
 
     if command -v ninja >/dev/null; then
         local ninja_version
-        ninja_version="$(ninja --version | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+        ninja_version="$(ninja --version | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/' || true)"
         if version_ge "$ninja_version" "1.11.0"; then
             pass "Ninja $ninja_version"
         else
@@ -285,9 +294,20 @@ check_environment() {
         fi
     fi
 
+    if command -v node >/dev/null; then
+        local node_version
+        node_version="$(node --version || true)"
+        if [[ "$node_version" == "$NODE_VERSION" ]]; then
+            pass "Node.js $node_version"
+        else
+            fail "Node.js $NODE_VERSION is required, found $node_version"
+            failures=$((failures + 1))
+        fi
+    fi
+
     if command -v git >/dev/null; then
         local git_version
-        git_version="$(git --version | awk '{print $3}')"
+        git_version="$(git --version | awk '{print $3}' || true)"
         if version_ge "$git_version" "2.22.0"; then
             pass "Git $git_version"
         else
@@ -298,7 +318,7 @@ check_environment() {
 
     if command -v LinkServer >/dev/null; then
         local linkserver_version
-        linkserver_version="$(LinkServer --version 2>/dev/null | sed -n 's/^LinkServer v\([0-9.]*\).*/\1/p' | head -n 1)"
+        linkserver_version="$(LinkServer --version 2>/dev/null | sed -n 's/^LinkServer v\([0-9.]*\).*/\1/p' | head -n 1 || true)"
         if [[ "$linkserver_version" == "26.9.130" ]]; then
             pass "LinkServer $linkserver_version"
         else
@@ -307,7 +327,16 @@ check_environment() {
         fi
     fi
 
-    available_kb="$(df -Pk "$REPO_ROOT" | awk 'NR==2 {print $4}')"
+    if [[ -x "$LV_FONT_CONV_DIR/node_modules/.bin/lv_font_conv" &&
+          "$("$LV_FONT_CONV_DIR/node_modules/.bin/lv_font_conv" --version 2>/dev/null || true)" == \
+              "$LV_FONT_CONV_VERSION" ]]; then
+        pass "lv_font_conv $LV_FONT_CONV_VERSION"
+    else
+        fail "font generator is missing: $LV_FONT_CONV_DIR"
+        failures=$((failures + 1))
+    fi
+
+    available_kb="$(df -Pk "$REPO_ROOT" | awk 'NR==2 {print $4}' || true)"
     if [[ "$available_kb" =~ ^[0-9]+$ ]] && (( available_kb >= 20 * 1024 * 1024 )); then
         pass "free disk: $((available_kb / 1024 / 1024)) GiB"
     else
@@ -391,12 +420,42 @@ install_system_packages() {
     "${SUDO[@]}" apt-get install -y "${APT_PACKAGES[@]}"
 }
 
+install_node() {
+    local archive="$REPO_ROOT/downloads/$NODE_ARCHIVE"
+    local node_dir="$REPO_ROOT/toolchains/$NODE_DIR_NAME"
+
+    if [[ -x "$node_dir/bin/node" &&
+          "$("$node_dir/bin/node" --version)" == "$NODE_VERSION" ]]; then
+        pass "reuse Node.js $NODE_VERSION"
+        return 0
+    fi
+
+    download_verified "$NODE_URL" "$archive" "$NODE_SHA256"
+    mkdir -p "$REPO_ROOT/toolchains"
+    tar -xJf "$archive" -C "$REPO_ROOT/toolchains"
+}
+
 install_python_environment() {
     if [[ ! -x "$REPO_ROOT/.venv/bin/python" ]]; then
         python3 -m venv "$REPO_ROOT/.venv"
     fi
     "$REPO_ROOT/.venv/bin/python" -m pip install --upgrade pip
     "$REPO_ROOT/.venv/bin/pip" install "${PYTHON_PACKAGES[@]}"
+}
+
+install_font_converter() {
+    if [[ -x "$LV_FONT_CONV_DIR/node_modules/.bin/lv_font_conv" &&
+          "$("$LV_FONT_CONV_DIR/node_modules/.bin/lv_font_conv" --version 2>/dev/null || true)" == \
+              "$LV_FONT_CONV_VERSION" ]]; then
+        pass "reuse lv_font_conv $LV_FONT_CONV_VERSION"
+        return 0
+    fi
+
+    mkdir -p "$LV_FONT_CONV_DIR"
+    npm install \
+        --prefix "$LV_FONT_CONV_DIR" \
+        --no-audit --no-fund --no-save \
+        "lv_font_conv@$LV_FONT_CONV_VERSION"
 }
 
 install_toolchain() {
@@ -457,10 +516,13 @@ init_sdk_workspace() {
 setup_environment() {
     printf '\n== Install or repair development environment ==\n'
     install_system_packages
+    install_node
+    source_project_env
     install_python_environment
     source_project_env
     install_toolchain
     source_project_env
+    install_font_converter
     ensure_transport_access
     init_sdk_workspace "$MCXN_SDK" "$SDK_TAG"
     install_linkserver
@@ -531,7 +593,8 @@ check_updates() {
     [[ -n "$current_tag" ]] ||
         current_tag="$(git -C "$MCXN_SDK/manifests" rev-parse --short HEAD)"
     if [[ "$current_tag" == v* ]]; then
-        current_hash="$(git -C "$MCXN_SDK/manifests" rev-parse "$current_tag^{commit}")"
+        current_hash="$(git -C "$MCXN_SDK/manifests" rev-parse "$current_tag^{commit}")" ||
+            die "unable to resolve local SDK release $current_tag"
     fi
     latest_hash="$(remote_tag_hash "$latest_tag")" ||
         die "unable to resolve remote SDK release $latest_tag"

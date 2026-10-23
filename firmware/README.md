@@ -15,10 +15,10 @@ Project-specific fixes are kept as patches so the SDK remains reproducible.
 ## Apply display optimization
 
 ```bash
-source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
+source development-plan/scripts/env.sh
 
 git -C "$MCXN_SDK/mcuxsdk/examples" apply \
-  /home/jxy/NXP/MCXN947/firmware/patches/0001-fix-lvgl-partial-buffer-size.patch
+  firmware/patches/0001-fix-lvgl-partial-buffer-size.patch
 ```
 
 ## Build and flash
@@ -54,10 +54,10 @@ Apply in order:
 
 ```bash
 git -C "$MCXN_SDK/mcuxsdk/examples" apply \
-  /home/jxy/NXP/MCXN947/firmware/patches/0001-fix-lvgl-partial-buffer-size.patch
+  firmware/patches/0001-fix-lvgl-partial-buffer-size.patch
 
 git -C "$MCXN_SDK/mcuxsdk/examples" apply \
-  /home/jxy/NXP/MCXN947/firmware/patches/0002-sync-display-flush-to-te.patch
+  firmware/patches/0002-sync-display-flush-to-te.patch
 ```
 
 ## Revision 0003: one TE wait per LVGL update

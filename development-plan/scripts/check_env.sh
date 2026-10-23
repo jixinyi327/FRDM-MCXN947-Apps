@@ -9,6 +9,8 @@ arm-none-eabi-gcc --version | head -1
 west --version
 cmake --version | head -1
 ninja --version
+node --version
+npm --version
 LinkServer --version
 
 printf '\n== SDK board ==\n'

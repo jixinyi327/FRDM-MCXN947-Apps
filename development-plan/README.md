@@ -8,6 +8,8 @@
 |---|---|---|
 | 主机 | 已验证 | WSL2，Ubuntu 24.04，内核 6.6.87.2 |
 | Arm GNU Toolchain | 已安装并实际编译 | GCC 14.2.1，`../toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi` |
+| Node.js | 已安装 | 24.22.1，`../toolchains/node-v24.22.1-linux-x64` |
+| lv_font_conv | 已安装 | 1.5.3，`../tools/lv_font_conv` |
 | MCUXpresso SDK | 已按目标板拉取 | 26.09.00，`../mcuxpresso-sdk` |
 | west | 已安装 | 1.5.0，`../.venv` |
 | CMake / Ninja | 已安装 | 3.31.10 / 1.13.2 |
@@ -19,11 +21,11 @@
 当前工作目录约定：
 
 ```text
-/home/jxy/NXP/MCXN947/
+<repository-directory>/
 ├── docs/                 原始及补充资料
 ├── mcuxpresso-sdk/       SDK 工作区和编译输出
-├── toolchains/           Arm GCC
-├── tools/linkserver/     本地解包的 LinkServer
+├── toolchains/           Arm GCC、Node.js 和固定工具链
+├── tools/                LinkServer 与字体生成器
 ├── .venv/                Python/west/CMake/Ninja 工具环境
 └── development-plan/     本开发计划
 ```
@@ -45,7 +47,7 @@
 ## 最短可执行路径
 
 ```bash
-source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
+source development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 # 编译内部 Flash 版本的 hello_world

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 16 px
  * Bpp: 4
- * Opts: --size 16 --bpp 4 --format lvgl --lv-include lvgl.h --font /home/jxy/NXP/MCXN947/mcuxpresso-sdk/mcuxsdk/middleware/lvgl/scripts/built_in_font/SourceHanSansSC-Normal.otf -r 0x20-0x7F --symbols 、上个中以位余佳像入全内击到制前剩动区即取吗命和在均坏坐块域复始完定宽察将就已布平并应度开当心态性成扫据描摸改效数整新显更最未查标格检次每测消清点状生用由画界的盖确示移空立笔签精素线绘统绪续网置自藏要覆观触言计认设试语请调输连部重除隐面靶页 --no-kerning --lv-font-name ui_font_zh_16 -o /home/jxy/NXP/MCXN947/apps/touchscreen_tester/ui/fonts/ui_font_zh_16.c
+ * Opts: --size 16 --bpp 4 --format lvgl --lv-include lvgl.h --font mcuxpresso-sdk/mcuxsdk/middleware/lvgl/scripts/built_in_font/SourceHanSansSC-Normal.otf -r 0x20-0x7F --symbols 、上个中以位余佳像入全内击到制前剩动区即取吗命和在均坏坐块域复始完定宽察将就已布平并应度开当心态性成扫据描摸改效数整新显更最未查标格检次每测消清点状生用由画界的盖确示移空立笔签精素线绘统绪续网置自藏要覆观触言计认设试语请调输连部重除隐面靶页 --no-kerning --lv-font-name ui_font_zh_16 -o apps/touchscreen_tester/ui/fonts/ui_font_zh_16.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE

@@ -2,11 +2,14 @@
 
 ## 1. 已完成的环境
 
-本机已经在 `/home/jxy/NXP/MCXN947` 内建立 isolated（隔离）工具链，不依赖 sudo 安装：
+当前工作区使用仓库目录内的 isolated（隔离）工具链。除系统包安装和 udev 规则外，
+日常构建不依赖全局安装：
 
 | 组件 | 版本 | 路径 |
 |---|---|---|
 | Arm GNU Toolchain | 14.2.Rel1 / GCC 14.2.1 | `toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi` |
+| Node.js | 24.22.1 | `toolchains/node-v24.22.1-linux-x64/bin` |
+| lv_font_conv | 1.5.3 | `tools/lv_font_conv/node_modules/.bin` |
 | west | 1.5.0 | `.venv/bin/west` |
 | CMake | 3.31.10 | `.venv/bin/cmake` |
 | Ninja | 1.13.2 | `.venv/bin/ninja` |
@@ -19,7 +22,7 @@
 ## 2. 每次打开终端的初始化
 
 ```bash
-source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
+source development-plan/scripts/env.sh
 ```
 
 该脚本设置：
@@ -31,7 +34,7 @@ source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
 可随时检查环境：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/development-plan/scripts/check_env.sh
+bash development-plan/scripts/check_env.sh
 ```
 
 当前已验证的核心输出：
@@ -58,8 +61,9 @@ frdmmcxn947  MCXN947  multi  cm33_core0, cm33_core1
 ### 3.1 Python 虚拟环境
 
 ```bash
-mkdir -p /home/jxy/NXP/MCXN947
-cd /home/jxy/NXP/MCXN947
+WORKSPACE="${MCXN_WORKSPACE:-$HOME/NXP/MCXN947}"
+mkdir -p "$WORKSPACE"
+cd "$WORKSPACE"
 python3 -m venv .venv
 
 # 本机直连 PyPI 曾出现 SSL EOF，使用文档建议的镜像
@@ -71,7 +75,34 @@ python3 -m venv .venv
   'west>=1.2' 'cmake>=3.30,<4' ninja jsonschema requests jinja2 pyserial pyelftools
 ```
 
-### 3.2 Arm GNU Toolchain
+### 3.2 Node.js 与字体生成器
+
+字体生成器固定使用 Node.js 24.22.1 和 `lv_font_conv` 1.5.3：
+
+```bash
+mkdir -p downloads toolchains tools/lv_font_conv
+
+curl -L --retry 5 \
+  -o downloads/node-v24.22.1-linux-x64.tar.xz \
+  'https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz'
+
+printf '%s  %s\n' \
+  '6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6' \
+  'downloads/node-v24.22.1-linux-x64.tar.xz' |
+  sha256sum -c -
+
+tar -xJf downloads/node-v24.22.1-linux-x64.tar.xz -C toolchains
+
+source development-plan/scripts/env.sh
+npm install \
+  --prefix tools/lv_font_conv \
+  --no-audit --no-fund --no-save \
+  lv_font_conv@1.5.3
+```
+
+`manage_dev_env.sh --setup` 会自动完成这一节，通常不需要手工执行。
+
+### 3.3 Arm GNU Toolchain
 
 ```bash
 mkdir -p toolchains downloads
@@ -83,17 +114,17 @@ curl -L --retry 5 \
 tar -xJf downloads/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz -C toolchains
 ```
 
-### 3.3 SDK 工作区
+### 3.4 SDK 工作区
 
 ```bash
-export PATH="/home/jxy/NXP/MCXN947/.venv/bin:$PATH"
+export PATH="$PWD/.venv/bin:$PATH"
 
 west init \
   -m https://github.com/nxp-mcuxpresso/mcuxsdk-manifests.git \
-  /home/jxy/NXP/MCXN947/mcuxpresso-sdk \
+  "$PWD/mcuxpresso-sdk" \
   --mr v26.09.00
 
-cd /home/jxy/NXP/MCXN947/mcuxpresso-sdk
+cd mcuxpresso-sdk
 
 # 先查看会下载哪些仓库
 west update_board --set board frdmmcxn947 --list-repo
@@ -104,7 +135,7 @@ west update_board --set board frdmmcxn947
 
 目标板清单会下载约 7.7 GB，包含 AI、网络、USB、LVGL、安全、电机和其他中间件。初次同步在本机耗时约 8 分钟，主要时间在 ExecuTorch 等子模块。
 
-### 3.4 LinkServer
+### 3.5 LinkServer
 
 NXP 的 Linux 安装器通常要求 sudo。当前已用“解包后使用”的方式放入项目目录：
 
@@ -161,13 +192,13 @@ LinkServer probes
 LinkServer 的规则文件位于：
 
 ```text
-/home/jxy/NXP/MCXN947/tools/linkserver/lib/udev/rules.d/85-linkserver_26.9.130.rules
+tools/linkserver/lib/udev/rules.d/85-linkserver_26.9.130.rules
 ```
 
 在可输入 sudo 密码时执行：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/development-plan/scripts/install_udev_rules.sh
+bash development-plan/scripts/install_udev_rules.sh
 ```
 
 当前用户属于 `dialout`、`plugdev`，这对串口有帮助，但不能替代调试器 udev 规则。若 LinkServer 只能以 root 访问探针，不要长期用 root 开发，应修正 udev 规则。
@@ -175,7 +206,7 @@ bash /home/jxy/NXP/MCXN947/development-plan/scripts/install_udev_rules.sh
 ## 6. 构建验证
 
 ```bash
-source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
+source development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \
@@ -187,7 +218,7 @@ west build -b frdmmcxn947 \
 也可直接运行：
 
 ```bash
-bash /home/jxy/NXP/MCXN947/development-plan/scripts/build_hello.sh
+bash development-plan/scripts/build_hello.sh
 ```
 
 已构建结果：

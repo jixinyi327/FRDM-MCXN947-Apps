@@ -15,17 +15,20 @@ MCXN_ENV_DEFAULT_ROOT="$(cd "$MCXN_ENV_SCRIPT_DIR/../.." && pwd)"
 export MCXN_ROOT="${MCXN_ROOT:-$MCXN_ENV_DEFAULT_ROOT}"
 export MCXN_SDK="${MCXN_SDK:-$MCXN_ROOT/mcuxpresso-sdk}"
 export ARMGCC_DIR="${ARMGCC_DIR:-$MCXN_ROOT/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi}"
+export MCXN_NODE_DIR="${MCXN_NODE_DIR:-$MCXN_ROOT/toolchains/node-v24.22.1-linux-x64}"
 export MCXN_LINKSERVER_DIR="${MCXN_LINKSERVER_DIR:-$MCXN_ROOT/tools/linkserver/usr/local/LinkServer_26.9.130}"
-export PATH="$ARMGCC_DIR/bin:$MCXN_ROOT/.venv/bin:$MCXN_LINKSERVER_DIR:$PATH"
+export PATH="$ARMGCC_DIR/bin:$MCXN_NODE_DIR/bin:$MCXN_ROOT/.venv/bin:$MCXN_LINKSERVER_DIR:$PATH"
 
 unset MCXN_ENV_SOURCE_FILE MCXN_ENV_SCRIPT_DIR MCXN_ENV_DEFAULT_ROOT
 
 command -v west >/dev/null || echo "west not found after setting PATH" >&2
 command -v arm-none-eabi-gcc >/dev/null || echo "arm-none-eabi-gcc not found after setting PATH" >&2
+command -v node >/dev/null || echo "node not found after setting PATH" >&2
 command -v LinkServer >/dev/null || echo "LinkServer not found after setting PATH" >&2
 
 echo "MCXN_ROOT=$MCXN_ROOT"
 echo "MCXN_SDK=$MCXN_SDK"
 echo "ARMGCC_DIR=$ARMGCC_DIR"
+echo "MCXN_NODE_DIR=$MCXN_NODE_DIR"
 echo "MCXN_LINKSERVER_DIR=$MCXN_LINKSERVER_DIR"
 

@@ -29,7 +29,7 @@
 ### 方案 A：LCD-PAR-S035 直接评估
 
 ```bash
-source /home/jxy/NXP/MCXN947/development-plan/scripts/env.sh
+source development-plan/scripts/env.sh
 cd "$MCXN_SDK"
 
 west build -b frdmmcxn947 \
