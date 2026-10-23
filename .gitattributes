@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+*.pdf binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.xlsx binary
+*.brd binary
+*.DSN binary
+

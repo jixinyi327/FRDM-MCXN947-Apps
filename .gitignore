@@ -1,0 +1,68 @@
+# Rebuildable vendor and local tool installations
+/mcuxpresso-sdk/
+/toolchains/
+/tools/
+/downloads/
+/.venv/
+
+# Large vendor datasheets, manuals and reference design packages.
+# Their versions and official URLs are recorded in docs and VERSIONS.md.
+/docs/
+/LCD-PAR-S035/
+
+# Failed or temporary west export attempts.
+/apps/hello_world_freestanding*/
+
+# Build and IDE output
+**/build/
+**/build_*/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/compile_commands.json
+**/.ninja_deps
+**/.ninja_log
+**/build.ninja
+**/*.elf
+**/*.bin
+**/*.hex
+**/*.map
+**/*.o
+**/*.obj
+**/*.a
+**/*.d
+**/*.su
+
+# Logs and serial captures
+*.log
+*.logs
+serial-*.txt
+serial-*.log
+
+# West/local state
+.west/
+.config
+.config-trace.*
+mcux_config.h
+mcux_modules.txt
+mcux_settings.txt
+mcuxsdk_version.h
+runners.yaml
+sysbuild_modules.txt
+west_build_invocations.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+*:Zone.Identifier
+*.swp
+*.swo
+*~
+

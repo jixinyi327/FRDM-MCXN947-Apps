@@ -1,0 +1,9 @@
+{
+  "cmake.useCMakePresets": "always",
+  "C_Cpp.default.compilerPath": "/home/jxy/NXP/MCXN947/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+  "C_Cpp.default.intelliSenseMode": "gcc-arm",
+  "terminal.integrated.env.linux": {
+    "ARMGCC_DIR": "/home/jxy/NXP/MCXN947/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi"
+  },
+  "mcuxpresso.linkserver.path": "/home/jxy/NXP/MCXN947/tools/linkserver/usr/local/LinkServer_26.9.130/LinkServer"
+}
