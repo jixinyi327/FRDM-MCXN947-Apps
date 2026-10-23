@@ -69,7 +69,14 @@ strip per display frame and caused long drags to become slow. This revision:
 - increases the partial buffer from 1/10 to 1/4 of the screen height;
 - restores the TE-wait state on the last flush of the update.
 
-Apply all three patches in numeric order.
+Apply all four patches in numeric order.
+
+## Revision 0004: TE horizontal + vertical blanking
+
+This experiment changes TE output from V-blank only to both H-blank and V-blank.
+It keeps memory usage and flush batching unchanged while making synchronization
+pulses more frequent.
+
 
 
 

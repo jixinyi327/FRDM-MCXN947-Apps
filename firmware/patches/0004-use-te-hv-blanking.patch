@@ -1,0 +1,12 @@
+diff --git a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+--- a/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
++++ b/lvgl_examples/lvgl_sdk/lvgl_support/mcx_flexio/lvgl_support.c
+@@ -398,7 +398,7 @@ status_t DEMO_InitLcdController(void)
+     const st7796s_config_t st7796sConfig = {.driverPreset    = kST7796S_DriverPresetLCDPARS035,
+                                             .pixelFormat     = kST7796S_PixelFormatRGB565,
+                                             .orientationMode = kST7796S_Orientation270,
+-                                            .teConfig        = kST7796s_TEVSync,
++                                            .teConfig        = kST7796S_TEHVSync,
+                                             .invertDisplay   = true,
+                                             .flipDisplay     = true,
+                                             .bgrFilter       = true};
