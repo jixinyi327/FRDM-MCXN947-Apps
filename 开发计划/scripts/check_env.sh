@@ -20,6 +20,11 @@ find "$MCXN_SDK/build/hello_world_core0" -maxdepth 1 \
   \( -name 'hello_world*.elf' -o -name 'hello_world*.bin' \) \
   -printf '%p %s bytes\n' 2>/dev/null || true
 
+printf '\n== Built touchscreen_tester ==\n'
+find "$MCXN_SDK/build/touchscreen_tester_core0" -maxdepth 1 \
+  \( -name 'touchscreen_tester*.elf' -o -name 'touchscreen_tester*.bin' \) \
+  -printf '%p %s bytes\n' 2>/dev/null || true
+
 printf '\n== LinkServer target support ==\n'
 LinkServer devices 2>/dev/null | grep -m1 'FRDM-MCXN947' || true
 
