@@ -52,6 +52,8 @@ git push -u origin main
 ├── skills/lvgl-ui/           LVGL UI 设计、本地化和工程规范
 ├── skills/frdm-mcxn947-lvgl-ui-performance/
 │                             本板显示性能与刷新约束
+├── skills/frdm-mcxn947-adc-dma/
+│                             ADC 分辨率、采样率与 eDMA 配置规范
 ├── development-plan/         环境、外设、硬件和排障文档
 ├── mcuxpresso-sdk/           本地 SDK，Git 忽略
 ├── toolchains/               本地 Arm GCC，Git 忽略
@@ -421,12 +423,15 @@ bash skills/frdm-mcxn947-lvgl-ui-performance/scripts/audit_ui_config.sh
 
 - `$lvgl-ui`：信息架构、设计令牌、控件状态、中英文、字体、焦点和工程规范；
 - `$frdm-mcxn947-lvgl-ui-performance`：双缓冲、TE、SmartDMA、撕裂与双核刷新边界。
+- `$frdm-mcxn947-adc-dma`：按 12/16 位分辨率和 kS/s 请求规划稳定的 ADC、触发和
+  eDMA ping-pong 采样路径。
 
 调用示例：
 
 ```text
 Use $lvgl-ui to review this LVGL screen and its localization.
 Use $frdm-mcxn947-lvgl-ui-performance to diagnose display tearing.
+Use $frdm-mcxn947-adc-dma with 16-bit resolution and a 2000k sample rate.
 ```
 
 ## 常见问题

@@ -147,7 +147,7 @@ int main(void)
 #endif
     s_boot_stage = 13U;
     PRINTF(
-        "Oscilloscope started: 2 MS/s, 1024-point PowerQuad FFT, core1=%s\r\n",
+        "Oscilloscope started: 2 MS/s, 512-point PowerQuad FFT, core1=%s\r\n",
         s_core1_ready ? "ready" : "timeout");
 
     for (;;)

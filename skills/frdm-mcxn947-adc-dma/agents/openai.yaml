@@ -1,0 +1,4 @@
+interface:
+  display_name: "FRDM-MCXN947 ADC+DMA"
+  short_description: "Configure stable MCXN947 ADC and DMA sampling"
+  default_prompt: "Use $frdm-mcxn947-adc-dma to configure my requested ADC resolution and sample rate."

@@ -5,6 +5,9 @@
   `lvgl-ui` skill.
 - For any LVGL, display, touch or UI performance work on this project, use the
   `frdm-mcxn947-lvgl-ui-performance` skill.
+- For ADC resolution, sample-rate, trigger, FIFO, eDMA or sample-buffer work,
+  use the `frdm-mcxn947-adc-dma` skill. Require the requested resolution and
+  sample rate before selecting an acquisition architecture.
 - Apply both skills when a UI change affects both presentation and the display
   pipeline: `lvgl-ui` governs the interface and
   `frdm-mcxn947-lvgl-ui-performance` protects board timing and refresh behavior.

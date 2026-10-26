@@ -4,21 +4,22 @@
 
 - UI core: `cm33_core0`
 - Acquisition and DSP core: `cm33_core1`
-- UI task period: 33 ms, nominal 30 FPS
+- UI task period: 16 ms, nominal 62.5 FPS
 - Display path: accepted LCD-PAR-S035 two-stripe TE/SmartDMA pipeline
-- ADC rate: 100 kS/s
-- ADC DMA: two linked TCDs, 1024 samples per buffer
-- FFT: PowerQuad Q15 RFFT, 1024 real samples
+- ADC rate: 2 MS/s
+- ADC conversion: software-triggered, self-chained LPADC command
+- ADC DMA: two linked TCDs, 3072 samples per buffer
+- FFT: PowerQuad Q15 RFFT, 512 real samples
 - Shared IPC: 8 KiB reserved `rpmsg_sh_mem`, sequence-protected snapshot
 
 ## Initial Link Result
 
 ```text
-core0 m_text:       401,512 B / 767 KiB
-core0 m_data:       226,160 B / 304 KiB
-core0 core1 image:   30,836 B section / 30,820 B image
-core1 m_text:        29,700 B / 51 KiB
-core1 m_data:        18,136 B / 52 KiB
+core0 m_text:       413,496 B / 767 KiB
+core0 m_data:       237,168 B / 304 KiB
+core0 core1 image:   43,348 B section / 43,340 B image
+core1 m_text:        42,220 B / 51 KiB
+core1 m_data:        44,424 B / 52 KiB
 ```
 
 The core0 figure includes LVGL, two RGB565 display stripes, the I1 waveform canvas,
@@ -27,10 +28,17 @@ PowerQuad driver.
 
 ## Expected Cadence
 
-- ADC half-buffer completion: every 10.24 ms, about 97.7 Hz;
-- shared snapshot publish: on each completed half-buffer;
-- UI snapshot consumption and redraw: every 33 ms, about 30 Hz;
+- ADC buffer completion: every 1.536 ms, about 651 Hz;
+- FFT job cadence: every fourth completed buffer, about 162.8 Hz;
+- shared snapshot publish: after each queued FFT job, about 162.8 Hz;
+- UI snapshot consumption and redraw: every 16 ms, nominal 62.5 FPS;
 - display flush: unchanged accepted TE/SmartDMA path.
+
+The 512-point FFT has a 3.90625 kHz raw bin spacing at 2 MS/s. When the 1536-point
+waveform window contains at least two complete cycles, peak frequency is measured
+from threshold crossings with linear interpolation; otherwise it falls back to
+three-bin logarithmic interpolation. The spectrum array remains at the original
+FFT resolution.
 
 ## Pending Measurements
 
@@ -57,5 +65,23 @@ This confirms that core1 starts from the embedded image and continues to publish
 ADC/DMA/FFT snapshots into the shared region. No input signal was connected during
 the runtime check, so waveform accuracy, frequency accuracy and panel appearance
 remain pending physical acceptance.
+
+## Continuous ADC Check
+
+The periodic LPTMR trigger was replaced by a software-started, self-chained LPADC
+command so that 16-bit conversions run continuously at the 2 MS/s ADC limit while
+eDMA drains FIFO0.
+
+Measured with a 10 kHz input:
+
+```text
+reported sample rate: 2,000,000 Hz
+ADC min/max raw:      2480 / 62687
+reported peak:        10,013 Hz
+DMA overruns:         0
+```
+
+The shared-state reading confirms numerical acquisition and frequency output. The
+on-screen visual check remains a separate physical acceptance item.
 
 Build evidence does not constitute physical UI or analog-signal acceptance.

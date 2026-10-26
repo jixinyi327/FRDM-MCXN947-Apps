@@ -11,7 +11,6 @@
 #include "fsl_edma.h"
 #include "fsl_inputmux.h"
 #include "fsl_lpadc.h"
-#include "fsl_lptmr.h"
 #include "fsl_spc.h"
 
 #define OSC_ADC_BASE           ADC0
@@ -19,9 +18,6 @@
 #define OSC_DMA_BASE           DMA0
 #define OSC_DMA_CHANNEL        0U
 #define OSC_DMA_IRQ            EDMA_0_CH0_IRQn
-#define OSC_LPTMR_BASE         LPTMR0
-#define OSC_TRIGGER_CLOCK_HZ   12000000U
-#define OSC_TRIGGER_TICKS      6U
 
 AT_NONCACHEABLE_SECTION_ALIGN(
     static uint32_t s_adc_buffers[2][OSC_DMA_SAMPLES], 32U);
@@ -38,15 +34,12 @@ static void *s_complete_callback_context;
 static void osc_adc_configure_clock_and_trigger(void)
 {
     CLOCK_EnableClock(kCLOCK_InputMux0);
-    CLOCK_SetupClockCtrl(kCLOCK_FRO12MHZ_ENA);
     CLOCK_AttachClk(kFRO_HF_to_ADC0);
     CLOCK_SetClkDiv(kCLOCK_DivAdc0Clk, 1U);
 
     SPC_EnableActiveModeAnalogModules(SPC0, kSPC_controlVref);
     INPUTMUX_EnableSignal(
         INPUTMUX0, kINPUTMUX_Adc0FifoARequestToDma0Ch21Ena, true);
-    INPUTMUX_AttachSignal(
-        INPUTMUX0, 0U, kINPUTMUX_Lptmr0ToAdc0Trigger);
 }
 
 static void osc_adc_configure_converter(void)
@@ -87,13 +80,16 @@ static void osc_adc_configure_converter(void)
     command_config.conversionResolutionMode =
         kLPADC_ConversionResolutionHigh;
     command_config.sampleTimeMode = kLPADC_SampleTimeADCK3;
+    command_config.chainedNextCommandNumber = OSC_ADC_COMMAND_ID;
+    command_config.enableWaitTrigger = false;
     LPADC_SetConvCommandConfig(
         OSC_ADC_BASE, OSC_ADC_COMMAND_ID, &command_config);
 
     LPADC_GetDefaultConvTriggerConfig(&trigger_config);
     trigger_config.targetCommandId = OSC_ADC_COMMAND_ID;
-    trigger_config.enableHardwareTrigger = true;
+    trigger_config.enableHardwareTrigger = false;
     LPADC_SetConvTriggerConfig(OSC_ADC_BASE, 0U, &trigger_config);
+    LPADC_DoResetFIFO0(OSC_ADC_BASE);
     LPADC_EnableFIFO0WatermarkDMA(OSC_ADC_BASE, true);
     LPADC_ClearStatusFlags(
         OSC_ADC_BASE,
@@ -159,16 +155,6 @@ static void osc_adc_configure_dma(void)
     EDMA_EnableChannelRequest(OSC_DMA_BASE, OSC_DMA_CHANNEL);
 }
 
-static void osc_adc_configure_timer(void)
-{
-    lptmr_config_t timer_config;
-
-    LPTMR_GetDefaultConfig(&timer_config);
-    timer_config.prescalerClockSource = kLPTMR_PrescalerClock_0;
-    LPTMR_Init(OSC_LPTMR_BASE, &timer_config);
-    LPTMR_SetTimerPeriod(OSC_LPTMR_BASE, OSC_TRIGGER_TICKS);
-}
-
 bool osc_adc_init(void)
 {
     s_total_completed = 0U;
@@ -179,13 +165,12 @@ bool osc_adc_init(void)
     osc_adc_configure_clock_and_trigger();
     osc_adc_configure_converter();
     osc_adc_configure_dma();
-    osc_adc_configure_timer();
     return true;
 }
 
 void osc_adc_start(void)
 {
-    LPTMR_StartTimer(OSC_LPTMR_BASE);
+    LPADC_DoSoftwareTrigger(OSC_ADC_BASE, 1UL);
 }
 
 void osc_adc_set_complete_callback(

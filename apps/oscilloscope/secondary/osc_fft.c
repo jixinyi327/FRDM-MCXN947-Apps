@@ -48,25 +48,24 @@ static int16_t osc_clip_q15(int32_t value)
     return (int16_t)value;
 }
 
-static uint16_t osc_adc_sample(const uint32_t *raw_samples, uint32_t index)
+static uint32_t osc_fft_energy(uint32_t index)
 {
-    return (uint16_t)(
-        (raw_samples[index] & OSC_ADC_RESULT_MASK) >>
-        OSC_ADC_RESULT_SHIFT);
+    int32_t real = s_fft_output[index * 2U];
+    int32_t imaginary = s_fft_output[index * 2U + 1U];
+
+    return (uint32_t)(real * real) +
+        (uint32_t)(imaginary * imaginary);
 }
 
-static int32_t osc_dbfs_tenths(uint32_t magnitude_squared)
+static int32_t osc_log2_energy_q8(uint32_t magnitude_squared)
 {
     uint32_t exponent;
     uint32_t mantissa_q15;
     uint32_t table_index;
-    int32_t log2_q8;
-    int32_t delta_q8;
-    int32_t dbfs_tenths;
 
     if (0U == magnitude_squared)
     {
-        return OSC_DBFS_FLOOR;
+        return 0;
     }
 
     exponent = 31U - (uint32_t)__CLZ(magnitude_squared);
@@ -84,8 +83,29 @@ static int32_t osc_dbfs_tenths(uint32_t magnitude_squared)
         table_index = 15U;
     }
 
-    log2_q8 =
-        (int32_t)(exponent * 256U + s_log2_fraction_q8[table_index]);
+    return (int32_t)(
+        exponent * 256U + s_log2_fraction_q8[table_index]);
+}
+
+static uint16_t osc_adc_sample(const uint32_t *raw_samples, uint32_t index)
+{
+    return (uint16_t)(
+        (raw_samples[index] & OSC_ADC_RESULT_MASK) >>
+        OSC_ADC_RESULT_SHIFT);
+}
+
+static int32_t osc_dbfs_tenths(uint32_t magnitude_squared)
+{
+    int32_t log2_q8;
+    int32_t delta_q8;
+    int32_t dbfs_tenths;
+
+    if (0U == magnitude_squared)
+    {
+        return OSC_DBFS_FLOOR;
+    }
+
+    log2_q8 = osc_log2_energy_q8(magnitude_squared);
     delta_q8 = log2_q8 -
         (int32_t)(2U * 13U * 256U);
     dbfs_tenths = (delta_q8 * 60206) / 256000;
@@ -98,6 +118,158 @@ static int32_t osc_dbfs_tenths(uint32_t magnitude_squared)
         dbfs_tenths = 0;
     }
     return dbfs_tenths;
+}
+
+static uint32_t osc_interpolated_peak_frequency_hz(
+    uint32_t peak_bin, uint32_t sample_rate_hz)
+{
+    uint32_t previous_energy;
+    uint32_t peak_energy;
+    uint32_t next_energy;
+    int32_t previous_log;
+    int32_t peak_log;
+    int32_t next_log;
+    int32_t denominator;
+    int32_t offset_q15;
+    int64_t frequency_scaled;
+
+    if ((0U == sample_rate_hz) ||
+        (peak_bin < 1U) ||
+        (peak_bin >= (OSC_FFT_SAMPLES / 2U)))
+    {
+        return (peak_bin * sample_rate_hz) / OSC_FFT_SAMPLES;
+    }
+
+    previous_energy = osc_fft_energy(peak_bin - 1U);
+    peak_energy = osc_fft_energy(peak_bin);
+    next_energy = osc_fft_energy(peak_bin + 1U);
+    if ((0U == previous_energy) ||
+        (0U == peak_energy) ||
+        (0U == next_energy))
+    {
+        return (peak_bin * sample_rate_hz) / OSC_FFT_SAMPLES;
+    }
+
+    previous_log = osc_log2_energy_q8(previous_energy);
+    peak_log = osc_log2_energy_q8(peak_energy);
+    next_log = osc_log2_energy_q8(next_energy);
+    denominator = previous_log - (2 * peak_log) + next_log;
+    if (denominator >= 0)
+    {
+        return (peak_bin * sample_rate_hz) / OSC_FFT_SAMPLES;
+    }
+
+    /*
+     * Parabolic interpolation of the logarithmic three-bin peak gives a
+     * fractional offset in [-0.5, 0.5].  Q15 keeps the calculation integer.
+     */
+    offset_q15 = (int32_t)(
+        (((int64_t)(previous_log - next_log)) * 16384) /
+        denominator);
+    if (offset_q15 < -16384)
+    {
+        offset_q15 = -16384;
+    }
+    else if (offset_q15 > 16384)
+    {
+        offset_q15 = 16384;
+    }
+
+    frequency_scaled =
+        (((int64_t)peak_bin * 32768) + offset_q15) *
+        sample_rate_hz;
+    return (uint32_t)(
+        (frequency_scaled + (OSC_FFT_SAMPLES * 32768) / 2) /
+        (OSC_FFT_SAMPLES * 32768));
+}
+
+static uint32_t osc_waveform_frequency_hz(
+    const osc_snapshot_t *snapshot)
+{
+    uint32_t span;
+    uint32_t minimum;
+    uint32_t maximum;
+    uint32_t low_threshold;
+    uint32_t midpoint;
+    uint32_t previous_sample;
+    uint32_t crossing_count = 0U;
+    uint32_t first_crossing_q16 = 0U;
+    uint32_t last_crossing_q16 = 0U;
+    bool armed = false;
+    uint32_t index;
+    uint32_t duration_q16;
+    uint64_t frequency;
+
+    minimum = snapshot->minimum_raw;
+    maximum = snapshot->maximum_raw;
+    if ((0U == snapshot->sample_rate_hz) ||
+        (maximum <= minimum))
+    {
+        return 0U;
+    }
+
+    span = maximum - minimum;
+    if (span < 32U)
+    {
+        return 0U;
+    }
+
+    low_threshold = minimum + span / 4U;
+    midpoint = minimum + span / 2U;
+    previous_sample = snapshot->waveform[0];
+
+    for (index = 1U; index < OSC_WAVE_POINTS; index++)
+    {
+        uint32_t sample = snapshot->waveform[index];
+
+        if (!armed)
+        {
+            if (sample <= low_threshold)
+            {
+                armed = true;
+            }
+        }
+        else if ((previous_sample < midpoint) &&
+                 (sample >= midpoint))
+        {
+            uint32_t transition = sample - previous_sample;
+
+            if (0U != transition)
+            {
+                uint32_t fraction_q16 = (uint32_t)(
+                    (((uint64_t)(midpoint - previous_sample)) * 65536U) /
+                    transition);
+                uint32_t crossing_q16 =
+                    (index - 1U) * 65536U + fraction_q16;
+
+                if (0U == crossing_count)
+                {
+                    first_crossing_q16 = crossing_q16;
+                }
+                last_crossing_q16 = crossing_q16;
+                crossing_count++;
+            }
+            armed = false;
+        }
+        previous_sample = sample;
+    }
+
+    if ((crossing_count < 3U) ||
+        (last_crossing_q16 <= first_crossing_q16))
+    {
+        return 0U;
+    }
+
+    duration_q16 = last_crossing_q16 - first_crossing_q16;
+    frequency =
+        ((uint64_t)(crossing_count - 1U) *
+         snapshot->sample_rate_hz * 65536U) /
+        duration_q16;
+    if (frequency > (snapshot->sample_rate_hz / 2U))
+    {
+        return 0U;
+    }
+    return (uint32_t)frequency;
 }
 
 void osc_fft_init(void)
@@ -230,10 +402,7 @@ void osc_fft_transform(
 
     for (index = 1U; index < OSC_SPECTRUM_BINS; index++)
     {
-        int32_t real = s_fft_output[index * 2U];
-        int32_t imaginary = s_fft_output[index * 2U + 1U];
-        uint32_t magnitude_squared =
-            (uint32_t)(real * real) + (uint32_t)(imaginary * imaginary);
+        uint32_t magnitude_squared = osc_fft_energy(index);
 
         if (magnitude_squared > maximum_magnitude_squared)
         {
@@ -247,18 +416,20 @@ void osc_fft_transform(
         uint32_t magnitude_squared = 0U;
         if (0U != index)
         {
-            int32_t real = s_fft_output[index * 2U];
-            int32_t imaginary = s_fft_output[index * 2U + 1U];
-            magnitude_squared =
-                (uint32_t)(real * real) +
-                (uint32_t)(imaginary * imaginary);
+            magnitude_squared = osc_fft_energy(index);
         }
         snapshot->spectrum[index] = (uint16_t)(
             (osc_dbfs_tenths(magnitude_squared) + 800) * 1000 / 800);
     }
 
     snapshot->peak_frequency_hz =
-        (peak_bin * snapshot->sample_rate_hz) / OSC_FFT_SAMPLES;
+        osc_waveform_frequency_hz(snapshot);
+    if (0U == snapshot->peak_frequency_hz)
+    {
+        snapshot->peak_frequency_hz =
+            osc_interpolated_peak_frequency_hz(
+                peak_bin, snapshot->sample_rate_hz);
+    }
     if (maximum_magnitude_squared < 16U)
     {
         snapshot->peak_frequency_hz = 0U;
