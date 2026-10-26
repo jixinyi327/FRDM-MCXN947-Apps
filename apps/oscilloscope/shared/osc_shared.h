@@ -11,14 +11,15 @@
 #include <stdint.h>
 
 #define OSC_SHARED_MAGIC        0x4F534331UL
-#define OSC_SHARED_VERSION      1UL
-#define OSC_SAMPLE_RATE_HZ      100000UL
+#define OSC_SHARED_VERSION      2UL
+#define OSC_SAMPLE_RATE_HZ      2000000UL
 #define OSC_SHARED_MEMORY_SIZE  0x2000UL
-#define OSC_DMA_SAMPLES         1024U
-#define OSC_WAVE_POINTS         512U
-#define OSC_SPECTRUM_BINS       512U
+#define OSC_DMA_SAMPLES         3072U
+#define OSC_FFT_SAMPLES         512U
+#define OSC_WAVE_POINTS         1536U
+#define OSC_SPECTRUM_BINS       256U
 #define OSC_ADC_CHANNEL         0U
-#define OSC_INPUT_PIN_NAME      "J4.2 / A0"
+#define OSC_INPUT_PIN_NAME      "J4.2 / ADC0_A0"
 
 enum
 {
@@ -47,7 +48,8 @@ typedef struct
     volatile uint32_t sequence;
     uint32_t magic;
     uint32_t version;
-    osc_snapshot_t data;
+    volatile uint32_t active_slot;
+    osc_snapshot_t frames[2];
 } osc_shared_state_t;
 
 _Static_assert(

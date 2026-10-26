@@ -21,7 +21,7 @@
 #define OSC_DMA_IRQ            EDMA_0_CH0_IRQn
 #define OSC_LPTMR_BASE         LPTMR0
 #define OSC_TRIGGER_CLOCK_HZ   12000000U
-#define OSC_TRIGGER_PERIOD_US  10U
+#define OSC_TRIGGER_TICKS      6U
 
 AT_NONCACHEABLE_SECTION_ALIGN(
     static uint32_t s_adc_buffers[2][OSC_DMA_SAMPLES], 32U);
@@ -32,12 +32,14 @@ static volatile uint32_t s_total_completed;
 static volatile uint32_t s_consumed_completed;
 static volatile uint32_t s_last_completed_buffer;
 static volatile uint32_t s_overruns;
+static osc_adc_complete_callback_t s_complete_callback;
+static void *s_complete_callback_context;
 
 static void osc_adc_configure_clock_and_trigger(void)
 {
     CLOCK_EnableClock(kCLOCK_InputMux0);
     CLOCK_SetupClockCtrl(kCLOCK_FRO12MHZ_ENA);
-    CLOCK_AttachClk(kFRO12M_to_ADC0);
+    CLOCK_AttachClk(kFRO_HF_to_ADC0);
     CLOCK_SetClkDiv(kCLOCK_DivAdc0Clk, 1U);
 
     SPC_EnableActiveModeAnalogModules(SPC0, kSPC_controlVref);
@@ -83,7 +85,7 @@ static void osc_adc_configure_converter(void)
     LPADC_GetDefaultConvCommandConfig(&command_config);
     command_config.channelNumber = OSC_ADC_CHANNEL;
     command_config.conversionResolutionMode =
-        kLPADC_ConversionResolutionStandard;
+        kLPADC_ConversionResolutionHigh;
     command_config.sampleTimeMode = kLPADC_SampleTimeADCK3;
     LPADC_SetConvCommandConfig(
         OSC_ADC_BASE, OSC_ADC_COMMAND_ID, &command_config);
@@ -148,6 +150,7 @@ static void osc_adc_configure_dma(void)
     EDMA_TcdEnableInterrupts(&s_dma_tcd[1], kEDMA_MajorInterruptEnable);
     EDMA_InstallTCD(OSC_DMA_BASE, OSC_DMA_CHANNEL, &s_dma_tcd[0]);
 
+    NVIC_SetPriority(OSC_DMA_IRQ, 3U);
     EnableIRQ(OSC_DMA_IRQ);
 #if defined(FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT) && \
     FSL_FEATURE_EDMA_ASYNCHRO_REQUEST_CHANNEL_COUNT
@@ -163,9 +166,7 @@ static void osc_adc_configure_timer(void)
     LPTMR_GetDefaultConfig(&timer_config);
     timer_config.prescalerClockSource = kLPTMR_PrescalerClock_0;
     LPTMR_Init(OSC_LPTMR_BASE, &timer_config);
-    LPTMR_SetTimerPeriod(
-        OSC_LPTMR_BASE,
-        USEC_TO_COUNT(OSC_TRIGGER_PERIOD_US, OSC_TRIGGER_CLOCK_HZ));
+    LPTMR_SetTimerPeriod(OSC_LPTMR_BASE, OSC_TRIGGER_TICKS);
 }
 
 bool osc_adc_init(void)
@@ -179,8 +180,19 @@ bool osc_adc_init(void)
     osc_adc_configure_converter();
     osc_adc_configure_dma();
     osc_adc_configure_timer();
-    LPTMR_StartTimer(OSC_LPTMR_BASE);
     return true;
+}
+
+void osc_adc_start(void)
+{
+    LPTMR_StartTimer(OSC_LPTMR_BASE);
+}
+
+void osc_adc_set_complete_callback(
+    osc_adc_complete_callback_t callback, void *context)
+{
+    s_complete_callback = callback;
+    s_complete_callback_context = context;
 }
 
 bool osc_adc_take_completed(uint32_t *buffer_index)
@@ -224,5 +236,9 @@ void EDMA_0_CH0_IRQHandler(void)
         s_last_completed_buffer ^= 1U;
         __DMB();
         s_total_completed++;
+        if (NULL != s_complete_callback)
+        {
+            s_complete_callback(s_complete_callback_context);
+        }
     }
 }

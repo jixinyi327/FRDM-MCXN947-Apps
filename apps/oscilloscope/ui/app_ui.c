@@ -16,6 +16,7 @@
 
 #define UI_SCREEN_WIDTH_PX  480
 #define UI_SCREEN_HEIGHT_PX 320
+#define UI_SCOPE_REFRESH_PERIOD_MS 16U
 
 static lv_obj_t *s_title;
 static lv_obj_t *s_sample_rate;
@@ -30,6 +31,7 @@ static bool s_core_ready;
 static bool s_snapshot_valid;
 static osc_snapshot_t s_snapshot;
 static ui_text_id_t s_status_text_id = UI_TEXT_WAITING;
+static uint32_t s_last_scope_refresh_tick;
 
 static void ui_apply_font(lv_obj_t *object, const lv_font_t *font)
 {
@@ -82,16 +84,18 @@ static void ui_update_language_text(void)
 {
     ui_language_t language = ui_i18n_get_language();
     ui_text_id_t status_text_id = ui_current_status_text();
-    const lv_font_t *title_font = ui_theme_title_font();
-    const lv_font_t *body_font = ui_theme_body_font();
+    const lv_font_t *title_font;
+    const lv_font_t *body_font;
 
     ui_theme_set_language(language);
+    title_font = ui_theme_title_font();
+    body_font = ui_theme_body_font();
     ui_apply_font(s_title, title_font);
     ui_apply_font(s_sample_rate, body_font);
     ui_apply_font(s_status, body_font);
     ui_apply_font(s_measurement, body_font);
     ui_apply_font(s_mode_button_label, body_font);
-    ui_apply_font(s_language_button_label, body_font);
+    ui_apply_font(s_language_button_label, ui_theme_cjk_body_font());
 
     lv_label_set_text(s_title, ui_tr(UI_TEXT_TITLE));
     lv_label_set_text(s_sample_rate, ui_tr(UI_TEXT_SAMPLE_RATE));
@@ -124,7 +128,7 @@ static void ui_update_measurement(void)
 
     span = (s_snapshot.maximum_raw >= s_snapshot.minimum_raw) ?
         ((uint32_t)s_snapshot.maximum_raw - s_snapshot.minimum_raw) : 0U;
-    span_mv = (span * 3300U) / 4095U;
+    span_mv = (span * 3300U) / 65535U;
     span_volts = span_mv / 1000U;
     span_fraction = (span_mv % 1000U) / 10U;
 
@@ -211,33 +215,37 @@ void app_ui_init(void)
     wd_scope_view_init(screen);
 
     controls_panel = lv_obj_create(screen);
-    ui_style_apply_panel(controls_panel);
-    lv_obj_set_pos(controls_panel, 8, 258);
-    lv_obj_set_size(controls_panel, 464, 54);
+    ui_style_apply_control_bar(controls_panel);
+    lv_obj_set_pos(controls_panel, 8, 256);
+    lv_obj_set_size(controls_panel, 464, 58);
+    lv_obj_set_flex_flow(controls_panel, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(
+        controls_panel,
+        LV_FLEX_ALIGN_START,
+        LV_FLEX_ALIGN_CENTER,
+        LV_FLEX_ALIGN_CENTER);
     lv_obj_remove_flag(controls_panel, LV_OBJ_FLAG_SCROLLABLE);
 
     info_panel = lv_obj_create(controls_panel);
-    ui_style_apply_panel(info_panel);
-    lv_obj_set_pos(info_panel, 0, 0);
-    lv_obj_set_size(info_panel, 350, 48);
-    lv_obj_set_style_pad_all(info_panel, 4, LV_PART_MAIN);
+    ui_style_apply_info_panel(info_panel);
+    lv_obj_set_height(info_panel, 48);
+    lv_obj_set_flex_grow(info_panel, 1);
     lv_obj_remove_flag(info_panel, LV_OBJ_FLAG_SCROLLABLE);
 
     s_status = lv_label_create(info_panel);
     lv_label_set_text(s_status, ui_tr(UI_TEXT_WAITING));
     ui_style_apply_text_muted(s_status);
     ui_apply_font(s_status, ui_theme_body_font());
-    lv_obj_set_pos(s_status, 4, 2);
+    lv_obj_set_pos(s_status, 8, 3);
 
     s_measurement = lv_label_create(info_panel);
     lv_label_set_text(s_measurement, "--");
     ui_style_apply_text_primary(s_measurement);
     ui_apply_font(s_measurement, ui_theme_body_font());
-    lv_obj_set_pos(s_measurement, 4, 23);
+    lv_obj_set_pos(s_measurement, 8, 24);
 
     s_mode_button = lv_button_create(controls_panel);
     ui_style_apply_button(s_mode_button);
-    lv_obj_set_pos(s_mode_button, 362, 0);
     lv_obj_set_size(s_mode_button, 94, 48);
     lv_obj_add_event_cb(
         s_mode_button, ui_mode_event, LV_EVENT_CLICKED, NULL);
@@ -250,6 +258,7 @@ void app_ui_init(void)
 
     wd_scope_view_set_mode(s_mode);
     wd_scope_view_render(&s_snapshot, false);
+    s_last_scope_refresh_tick = lv_tick_get();
 }
 
 void app_ui_set_core_ready(bool ready)
@@ -273,6 +282,13 @@ void app_ui_update(const osc_snapshot_t *snapshot, bool valid)
     ui_update_measurement();
     if (valid && (s_snapshot.completed_buffers != previous_buffers))
     {
-        wd_scope_view_render(&s_snapshot, true);
+        uint32_t now = lv_tick_get();
+
+        if ((uint32_t)(now - s_last_scope_refresh_tick) >=
+            UI_SCOPE_REFRESH_PERIOD_MS)
+        {
+            wd_scope_view_render(&s_snapshot, true);
+            s_last_scope_refresh_tick = now;
+        }
     }
 }

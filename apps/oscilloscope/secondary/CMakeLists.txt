@@ -22,12 +22,21 @@ include(
 mcux_add_source(
     SOURCES
         main.c
+        FreeRTOSConfig.h
         osc_adc.c
         osc_adc.h
+        osc_dac_sine.c
+        osc_dac_sine.h
         osc_fft.c
         osc_fft.h
         ../shared/osc_shared.c
         ../shared/osc_shared.h
+)
+
+mcux_add_include(
+    BASE_PATH ${SdkRootDirPath}
+    INCLUDES
+        ${board_root}/${board}/freertos_config_board/${core_id}
 )
 
 mcux_add_include(

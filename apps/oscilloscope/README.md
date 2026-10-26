@@ -81,6 +81,10 @@ cd <repository-directory>
 构建使用 `west --sysbuild`：先构建 `cm33_core1`，生成 `core1_image.bin`，再把它
 嵌入 `cm33_core0` 镜像。不要单独烧写 core1 ELF，否则会破坏主从核镜像布局。
 
+`--flash` 会在构建和检查通过后，通过 `lsusb` 验证 WSL 中能看到 MCU-LINK
+`1fc9:0143`，再使用 LinkServer 烧写 core0 镜像。脚本不会自动修改 `usbipd`
+映射；探针不可见或 `lsusb` 卡住时会停止并报告错误。
+
 ## 中文字体
 
 修改 `ui/ui_i18n.c` 的中文文案后运行：
@@ -101,7 +105,7 @@ cd <repository-directory>
 ## 首版限制
 
 - 无模拟前端，只有 0-3.3 V 单端输入；
-- 无硬件抗混叠滤波器，超过 50 kHz 的信号会混叠；
+- 无硬件抗混叠滤波器，超过 1 MHz 的信号会混叠；
 - 三角窗和相对幅度归一化只用于首版频谱显示；
 - 当前没有时基、垂直增益、触发沿、游标和波形存储；
 - 频谱幅度是相对值，不是经过校准的 dBm；

@@ -52,6 +52,17 @@ mcux_add_include(
     INCLUDES ../oscilloscope_secondary/${CONFIG_TOOLCHAIN}/
 )
 
+get_filename_component(
+    OSC_CORE1_IMAGE
+    "${APPLICATION_BINARY_DIR}/../oscilloscope_secondary/${CONFIG_TOOLCHAIN}/core1_image.bin"
+    ABSOLUTE
+)
+set_property(
+    SOURCE ${SdkRootDirPath}/components/misc_utilities/fsl_incbin.S
+    APPEND
+    PROPERTY OBJECT_DEPENDS "${OSC_CORE1_IMAGE}"
+)
+
 include(
     ${SdkRootDirPath}/${board_root}/${board}/lvgl_examples/lvgl_guider_bm/reconfig.cmake
     OPTIONAL
@@ -59,6 +70,11 @@ include(
 include(
     ${SdkRootDirPath}/${board_root}/${board}/multicore_examples/reconfig.cmake
     OPTIONAL
+)
+
+mcux_add_linker_symbol(
+    SYMBOLS
+        "__stack_size__=0x4000"
 )
 
 mcux_convert_binary(BINARY ${APPLICATION_BINARY_DIR}/${MCUX_SDK_PROJECT_NAME}.bin)

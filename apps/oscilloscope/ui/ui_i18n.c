@@ -11,7 +11,7 @@ static ui_language_t s_language = UI_LANGUAGE_ZH;
 static const char *const translations[UI_LANGUAGE_COUNT][UI_TEXT_COUNT] = {
     [UI_LANGUAGE_ZH] = {
         [UI_TEXT_TITLE] = "示波器",
-        [UI_TEXT_SAMPLE_RATE] = "采样率 100 kS/s",
+        [UI_TEXT_SAMPLE_RATE] = "采样率 2 MS/s",
         [UI_TEXT_WAVEFORM] = "波形",
         [UI_TEXT_SPECTRUM] = "频谱",
         [UI_TEXT_ACQUIRING] = "采集运行中",
@@ -22,11 +22,11 @@ static const char *const translations[UI_LANGUAGE_COUNT][UI_TEXT_COUNT] = {
         [UI_TEXT_LANGUAGE_ENGLISH] = "EN",
         [UI_TEXT_LANGUAGE_CHINESE] = "中文",
         [UI_TEXT_MEASUREMENT_TEMPLATE] = "峰峰值 %u.%02u V | 峰值 %u.%02u kHz",
-        [UI_TEXT_SAMPLE_DETAIL_TEMPLATE] = "1024 点 | FFT %lu 周期",
+        [UI_TEXT_SAMPLE_DETAIL_TEMPLATE] = "4096 点采集 | FFT %lu 周期",
     },
     [UI_LANGUAGE_EN] = {
         [UI_TEXT_TITLE] = "Oscilloscope",
-        [UI_TEXT_SAMPLE_RATE] = "Sample rate 100 kS/s",
+        [UI_TEXT_SAMPLE_RATE] = "Sample rate 2 MS/s",
         [UI_TEXT_WAVEFORM] = "Waveform",
         [UI_TEXT_SPECTRUM] = "Spectrum",
         [UI_TEXT_ACQUIRING] = "Acquisition running",
@@ -37,7 +37,7 @@ static const char *const translations[UI_LANGUAGE_COUNT][UI_TEXT_COUNT] = {
         [UI_TEXT_LANGUAGE_ENGLISH] = "EN",
         [UI_TEXT_LANGUAGE_CHINESE] = "中文",
         [UI_TEXT_MEASUREMENT_TEMPLATE] = "Vpp %u.%02u V | Peak %u.%02u kHz",
-        [UI_TEXT_SAMPLE_DETAIL_TEMPLATE] = "1024 pts | FFT %lu cycles",
+        [UI_TEXT_SAMPLE_DETAIL_TEMPLATE] = "4096-pt capture | FFT %lu cycles",
     },
 };
 
